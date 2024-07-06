@@ -11,7 +11,7 @@ let mapleader=" "
 set confirm
 set nostartofline
 set noendofline
-set pumheight=15                                        " Limit CoC to 5 sugestions
+set pumheight=5                                        " Limit CoC to 5 sugestions
 set signcolumn=yes                                     " Always show sign column
 set tabstop=2 shiftwidth=2 softtabstop=2               " Indentation levels
 set expandtab smarttab autoindent                      " Tab settings
