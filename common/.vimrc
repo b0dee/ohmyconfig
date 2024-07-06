@@ -268,8 +268,6 @@ let g:coc_user_config = {
 \ }
 
 let g:coc_global_extensions= [ 
-  \ 'coc-angular',
-  \ 'coc-snippets',
   \ 'coc-clangd',
   \ 'coc-css',
   \ 'coc-highlight',
