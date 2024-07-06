@@ -91,13 +91,15 @@ Plug 'mbbill/undotree'
 Plug 'tpope/vim-vinegar'
 Plug 'godlygeek/tabular'
 Plug 'preservim/vim-markdown'
-Plug 'vim-scripts/Auto-Pairs'
+Plug 'b0dee/Auto-Pairs'
 Plug 'romainl/vim-cool'
 Plug 'tpope/vim-endwise'
 Plug 'romainl/vim-qf'
 Plug 'bfrg/vim-qf-preview'
 Plug 'sheerun/vim-polyglot'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': 'npm ci'}
+Plug 'mattn/calendar-vim'
+Plug 'vimwiki/vimwiki'
 
 " UI
 Plug 'markonm/traces.vim'
@@ -281,6 +283,18 @@ let g:coc_global_extensions= [
   \ 'coc-xml',
 \ ]
 
+" Calendar
+let g:calendar_monday = 1
+let g:calendar_diary=$HOME.'/repos/diary'
+
+" VimWiki
+
+let s:vimwiki_path = has('win32') || has('win64') ? expand($HOME."\\repos\\vimwiki\\") : "~/repos/vimwiki/"
+let g:vimwiki_list = [
+  \ {'path': s:vimwiki_path,
+  \ 'syntax': 'markdown', 'ext': 'md'}
+\ ]
+
 " ################################
 " #                              #
 " #      CUSTOM FUNCTIONS        #
@@ -289,6 +303,11 @@ let g:coc_global_extensions= [
 
 function! Now() abort
   return strftime('%d/%m %H:%M')
+endfunction
+
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
 function! ShowDocumentation()
