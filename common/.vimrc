@@ -98,7 +98,7 @@ Plug 'tpope/vim-endwise'
 Plug 'romainl/vim-qf'
 Plug 'bfrg/vim-qf-preview'
 Plug 'sheerun/vim-polyglot'
-Plug 'yegappan/lsp'
+Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': 'npm ci'}
 
 " UI
 Plug 'markonm/traces.vim'
@@ -249,6 +249,40 @@ augroup qfpreview
     \ | let b:gitgutter_was_enabled = gitgutter#utility#getbufvar(expand('<abuf>'), 'enabled')
     \ | call feedkeys("p")
 augroup END
+" CoC
+let g:coc_user_config = {
+  \ 'floatFactory.floatConfig': {
+  \   'border': v:true
+  \ },
+  \ 'suggest.floatConfig': {
+  \   'border': v:true
+  \ },
+  \ 'suggest.enablePreselect': v:false,
+  \ 'suggest.noselect': v:true,
+  \ 'suggest.virtualText': v:true,
+  \ 'suggest.acceptSuggestionOnCommitCharacter': v:true,
+  \ 'diagnostic.displayByAle': v:true,
+  \ 'javascript.suggest.autoImports': v:true,
+  \ 'typescript.suggest.autoImports': v:true,
+  \ 'colors.enable': v:true,
+\ }
+
+let g:coc_global_extensions= [ 
+  \ 'coc-angular',
+  \ 'coc-snippets',
+  \ 'coc-clangd',
+  \ 'coc-css',
+  \ 'coc-highlight',
+  \ 'coc-html',
+  \ 'coc-json',
+  \ 'coc-markdownlint',
+  \ 'coc-jedi',
+  \ 'coc-sh',
+  \ 'coc-sql',
+  \ 'coc-tsserver',
+  \ 'coc-vimlsp',
+  \ 'coc-xml',
+\ ]
 
 " ################################
 " #                              #
@@ -258,6 +292,16 @@ augroup END
 
 function! Now() abort
   return strftime('%d/%m %H:%M')
+endfunction
+
+function! ShowDocumentation()
+  if coc#rpc#ready() && CocAction('hasProvider', 'hover') && !coc#float#has_float()
+    silent call CocActionAsync('doHover')
+  elseif &filetype == "cs"
+    silent :OmniSharpDocumentation
+  else
+    silent call feedkeys('K', 'in')
+  endif
 endfunction
 
 function! RelativeOrAbsolutePath() abort
@@ -308,4 +352,22 @@ cnoreabbrev Stage GitGutterPreviewHunk
 let g:vim_markdown_new_list_item_indent = 0
 let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_follow_anchor = 1
+
+" GoTo code navivgation
+autocmd FileType * nmap <silent> gd <Plug>(coc-definition)
+autocmd FileType * nmap <silent> gi <Plug>(coc-implementation)
+
+nnoremap <silent>K :call ShowDocumentation()<CR>
+
+" Use tab for trigger completion with characters ahead and navigate
+inoremap <silent><expr> <TAB>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+
+" Make <CR> to accept selected completion item or notify coc.nvim to format
+" <C-g>u breaks current undo, please make your own choice
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
