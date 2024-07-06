@@ -39,7 +39,10 @@ Plug 'tpope/vim-obsession'
 Plug 'mbbill/undotree'
 Plug 'vim-scripts/LargeFile'
 Plug 'tpope/vim-sensible'
-Plug 'tmux-plugins/vim-tmux-focus-events'
+if !has('win32')
+  Plug 'tmux-plugins/vim-tmux-focus-events'
+  Plug 'christoomey/vim-tmux-navigator'
+endif
 
 " UI/UX
 " Plug 'mhinz/vim-startify'                           " Vim Start Screen
