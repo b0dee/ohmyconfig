@@ -295,8 +295,6 @@ endfunction
 function! ShowDocumentation()
   if coc#rpc#ready() && CocAction('hasProvider', 'hover') && !coc#float#has_float()
     silent call CocActionAsync('doHover')
-  elseif &filetype == "cs"
-    silent :OmniSharpDocumentation
   else
     silent call feedkeys('K', 'in')
   endif
