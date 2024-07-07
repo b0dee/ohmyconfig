@@ -113,7 +113,7 @@ add-zsh-hook chpwd tmux-git-autofetch
     
 eval "$(fzf --zsh)"
 
-alias rg="rg --files --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
+alias rg="rg --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
 export FZF_DEFAULT_COMMAND="rg --files --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
 
 # Launch tmux KEEP THIS LAST
