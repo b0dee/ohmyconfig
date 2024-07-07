@@ -109,7 +109,7 @@ Plug 'machakann/vim-highlightedyank'
 Plug 'itchyny/lightline.vim'
 Plug 'luochen1990/rainbow'
 Plug 'b0dee/elevator.vim'
-Plug 'catppuccin/vim', { 'as': 'catppuccin'}
+Plug 'sainnhe/sonokai'
 
 " Linux only 
 if !has('win32')
@@ -159,6 +159,10 @@ let g:elevator#highlight = 'PmenuThumb'
 " Fix comments in json files
 autocmd FileType json syntax match Comment +\/\/.\+$+
 
+" Colorscheme
+let g:sonokai_style = 'andromeda'
+let g:sonokai_better_performance = 1
+colorscheme sonokai
 
 " Bookmarks
 let g:bookmark_sign = '♥'
@@ -192,12 +196,9 @@ let g:rainbow_conf = {
   \	},
 \ }
 
-" Theme
-colorscheme catppuccin_macchiato
-
 " Status Line
 let g:lightline = {
-  \ 'colorscheme': 'catppuccin_macchiato',
+  \ 'colorscheme': 'sonokai',
   \ 'active': {
   \   'left': [ [ 'mode', 'paste' ], [ 'gitbranch' ], [ 'readonly', 'pwd', 'relativepath', 'modified' ] ],
   \   'right': [ [ 'battery', 'now'  ], [ 'lineinfo', 'percent' ], [ 'filetype', 'fileencoding', 'fileformat'  ] ],
@@ -305,6 +306,7 @@ let g:vim_markdown_new_list_item_indent = 0
 let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_follow_anchor = 1
 let g:vim_markdown_strikethrough = 1
+
 
 " ################################
 " #                              #
