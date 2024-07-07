@@ -1,0 +1,9 @@
+live_config_reload = true
+
+[font]
+normal = { family = "JetBrainsMonoNerdFont", style = "Regular" }
+bold = {  style = "Bold" }
+italic = {  style = "Italic" }
+bold_italic = {  style = "Bold Italic" }
+size = 8
+
