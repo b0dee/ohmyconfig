@@ -407,9 +407,13 @@ abbreviate Cal CalendarT
 command! -bang -nargs=? -complete=dir Rg call fzf#vim#grep("rg --column --line-number --no-heading --color=always --smart-case --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}' -- ".fzf#shellescape(<q-args>), fzf#vim#with_preview(), <bang>0)
 command! -bang -nargs=? -complete=dir RG call fzf#vim#grep2("rg --column --line-number --no-heading --color=always --smart-case --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}' -- ", <q-args>, fzf#vim#with_preview(), <bang>0)
 
-
 augroup netrw_mapping
   autocmd!
   autocmd FileType netrw nmap <buffer> h -^
   autocmd FileType netrw nmap <buffer> l <CR>
 augroup END
+
+noremap  <silent><C-n> :Lexplore<CR>
+noremap! <silent><C-n> <Esc>:Lexplore<CR>
+tnoremap <silent><C-n> :Lexplore<CR>
+
