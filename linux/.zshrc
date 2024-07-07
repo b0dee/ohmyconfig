@@ -111,7 +111,14 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 tmux-git-autofetch() {(/home/joe/.tmux/plugins/tmux-git-autofetch/git-autofetch.tmux --current &)}
 add-zsh-hook chpwd tmux-git-autofetch
     
-# Launch tmux
+eval "$(fzf --zsh)"
+
+alias rg="rg --files --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
+export FZF_DEFAULT_COMMAND="rg --files --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
+
+# Launch tmux KEEP THIS LAST
 if command -v tmux &> /dev/null && [ -n "$PS1"  ] && [[ ! "$TERM" =~ screen  ]] && [[ ! "$TERM" =~ tmux  ]] && [ -z "$TMUX"  ]; then
     exec tmux
 fi
+
+
