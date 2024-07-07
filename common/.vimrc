@@ -285,15 +285,26 @@ let g:coc_global_extensions= [
 
 " Calendar
 let g:calendar_monday = 1
-let g:calendar_diary=$HOME.'/repos/diary'
+let g:calendar_diary=$HOME.'/repos/vimwiki/diary'
 
 " VimWiki
 
+let g:vimwiki_markdown_link_ext = 1
 let s:vimwiki_path = has('win32') || has('win64') ? expand($HOME."\\repos\\vimwiki\\") : "~/repos/vimwiki/"
 let g:vimwiki_list = [
-  \ {'path': s:vimwiki_path,
-  \ 'syntax': 'markdown', 'ext': 'md'}
+  \ {
+    \ 'path': s:vimwiki_path,
+    \ 'syntax': 'markdown', 'ext': 'md', 
+    \ 'auto_diary_index': 1
+  \ }
 \ ]
+
+" Markdown
+let g:vim_markdown_new_list_item_indent = 0
+let g:vim_markdown_folding_disabled = 1
+let g:vim_markdown_follow_anchor = 1
+let g:vim_markdown_strikethrough = 1
+
 
 " ################################
 " #                              #
