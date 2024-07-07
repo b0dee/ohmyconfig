@@ -1,0 +1,7 @@
+[init]
+	defaultBranch = master
+[user]
+	name = n0bodee
+	email = thath@looksnice.com
+[push]
+	autoSetupRemote = true
