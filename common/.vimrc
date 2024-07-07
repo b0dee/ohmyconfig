@@ -284,9 +284,6 @@ let g:coc_global_extensions= [
   \ 'coc-xml',
 \ ]
 
-" Calendar
-let g:calendar_monday = 1
-let g:calendar_diary=$HOME.'/repos/vimwiki/diary'
 
 " VimWiki
 
@@ -299,6 +296,10 @@ let g:vimwiki_list = [
     \ 'auto_diary_index': 1
   \ }
 \ ]
+
+" Calendar
+let g:calendar_monday = 1
+let g:calendar_diary=s:vimwiki_path . 'diary'
 
 " Markdown
 let g:vim_markdown_new_list_item_indent = 0
