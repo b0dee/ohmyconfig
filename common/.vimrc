@@ -49,6 +49,7 @@ let g:LargeFile=100                                    " Activate when file is >
 set shiftround
 autocmd GUIEnter * set vb t_vb= " Disable error bells and visual flash for GUI
 autocmd VimEnter * set vb t_vb= " Same as above but terminal
+let g:polyglot_disabled = ['markdown']
 
 " ################################
 " #                              #
@@ -350,12 +351,12 @@ noremap! <silent><C-T> <Esc>:tabedit<CR>
 tnoremap <silent><C-T> <C-W>:tabedit<CR>
 
 " Navigate buffer tabs with ctrl+w + h/l
-noremap <silent><C-W>H :tabprevious<CR>
-noremap! <silent><C-W>H <Esc>:tabprevious<CR>
-tnoremap <silent><C-W>H <C-W>:tabprevious<CR>
-noremap <silent><C-W>L :tabnext<CR>
-noremap! <silent><C-W>L <Esc>:tabnext<CR>
-tnoremap <silent><C-W>L <C-W>:tabnext<CR>
+noremap <silent><C-W>h :tabprevious<CR>
+noremap! <silent><C-W>h <Esc>:tabprevious<CR>
+tnoremap <silent><C-W>h <C-W>:tabprevious<CR>
+noremap <silent><C-W>l :tabnext<CR>
+noremap! <silent><C-W>l <Esc>:tabnext<CR>
+tnoremap <silent><C-W>l <C-W>:tabnext<CR>
 
 " Move tabs left and right
 noremap <silent><C-,> :tabmove-<CR>
@@ -374,9 +375,6 @@ cnoreabbrev HideChanges GitGutterLineHighlightsDisable
 cnoreabbrev ToggleChanges GitGutterLineHighlightsToggle
 cnoreabbrev Stage GitGutterPreviewHunk
 
-let g:vim_markdown_new_list_item_indent = 0
-let g:vim_markdown_folding_disabled = 1
-let g:vim_markdown_follow_anchor = 1
 
 " GoTo code navivgation
 autocmd FileType * nmap <silent> gd <Plug>(coc-definition)
@@ -395,4 +393,5 @@ inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 " <C-g>u breaks current undo, please make your own choice
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+abbreviate Cal CalendarT
 
