@@ -99,7 +99,6 @@ Plug 'bfrg/vim-qf-preview'
 Plug 'sheerun/vim-polyglot'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': 'npm ci'}
 Plug 'mattn/calendar-vim'
-Plug 'vimwiki/vimwiki'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
@@ -298,21 +297,9 @@ let g:netrw_liststyle = 3
 let g:netrw_winsize   = 30
 let g:netrw_browse_split = 4
 
-" VimWiki
-let g:vimwiki_markdown_link_ext = 0
-let g:vimwiki_list = [
-  \ {
-    \ 'syntax': 'markdown', 'ext': 'md', 
-    \ 'auto_diary_index': 1
-  \ }
-\ ]
-
-
-call vimwiki#vars#init()
-
 " Calendar
 let g:calendar_monday = 1
-let g:calendar_diary= $HOME . '/vimwiki/diary'
+let g:calendar_diary= $HOME . '/repos/diary'
 
 " ################################
 " #                              #
