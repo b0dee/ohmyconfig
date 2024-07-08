@@ -202,15 +202,15 @@ let g:lightline = {
   \ 'colorscheme': 'sonokai',
   \ 'active': {
   \   'left': [ [ 'mode', 'paste' ], [ 'gitbranch' ], [ 'readonly', 'pwd', 'relativepath', 'modified' ] ],
-  \   'right': [ [ 'battery', 'now'  ], [ 'lineinfo', 'percent' ], [ 'filetype', 'fileencoding', 'fileformat'  ] ],
+  \   'right': [ [ 'filetype', 'fileencoding', 'fileformat'  ],  [ 'lineinfo', 'percent' ]],
   \ },
   \ 'inactive': {
-  \   'right': [ [ 'now' ], [ 'lineinfo', 'percent' ], []],
+  \   'left': [ [ 'readonly', 'pwd', 'relativepath', 'modified' ] ],
+  \   'right': [ [ 'lineinfo', 'percent' ], []],
   \ },
   \ 'component_function': {
   \   'gitbranch':'FugitiveHead',
   \   'pwd': 'RelativeOrAbsolutePath',
-  \   'now': 'Now',
   \ },
   \ 'component': {
   \   'lineinfo': '%3l:%-2v%<',
@@ -306,10 +306,6 @@ let g:calendar_diary= $HOME . '/repos/diary'
 " #      CUSTOM FUNCTIONS        #
 " #                              #
 " ################################
-
-function! Now() abort
-  return strftime('%d/%m %H:%M')
-endfunction
 
 function! CheckBackspace() abort
   let col = col('.') - 1
