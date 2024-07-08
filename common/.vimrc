@@ -5,6 +5,7 @@
 " ################################
 syntax on                                              " Enable syntax highlighting
 set updatetime=100
+set conceallevel=2
 filetype indent on                                     " Indent based on file type
 " Set leader to space
 let mapleader=" "
