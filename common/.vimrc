@@ -112,6 +112,7 @@ Plug 'itchyny/lightline.vim'
 Plug 'luochen1990/rainbow'
 Plug 'b0dee/elevator.vim'
 Plug 'sainnhe/sonokai'
+Plug 'prisma/vim-prisma'
 
 " Linux only 
 if !has('win32')
