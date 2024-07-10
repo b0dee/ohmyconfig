@@ -42,6 +42,7 @@ set viminfo='100,<9999,s100                            " Store info from no more
 set noshowmode                                         " No need to notify mode changes, we have them visible perma
 set termguicolors                                      " Enable use of all colours
 set textwidth=0
+autocmd FileType markdown,txt set textwidth=80
 set guicursor=n-v-c:block-Cursor,r-cr:hor30
 set nocompatible
 highlight SpellBad cterm=bold ctermbg=darkred          " Spelling error highlighting
@@ -410,23 +411,50 @@ tnoremap <silent><C-n> :Lexplore<CR>
 
 let g:bujo_path = '~/repos/bujo/'
 let g:bujo_journal_default_name = "default"
-let g:bujo_winsize = 30
+let g:bujo_index_winsize = 30
+let g:bujo_daily_log_winsize = 50
+let g:bujo_index_template_include_future = v:true
+let g:bujo_index_template_include_monthly = v:true
+let g:bujo_index_template_include_daily = v:true
+" The below - in theory - should allow for auto rotation of files per month/week/day 
+" as function will just replace and open file based on what set here
+" so %Y-%m-%d (aka. 2024-07-10) or %Y-%m (aka. 2024-07) etc.
+let g:bujo_daily_log_filename = "daily_%Y-%m.md"
+let g:bujo_daily_log_header =  "# %A %B %d" 
+let g:bujo_daily_log_task_header =  "**Tasks:**" 
+let g:bujo_daily_log_event_header =  "**Events:**" 
+let g:bujo_daily_log_note_header =  "**Notes:**" 
+let g:bujo_daily_log_include_task_header = v:true
+let g:bujo_daily_log_include_note_header = v:true
+" 0 = Don't include header
+" 1 = Include header
+" TODO 2 = Smart inclusion only if events scheduled for this day
+let g:bujo_daily_log_include_event_header = 0
+let s:BUJO_NOTE = "note"
+let s:BUJO_TASK = "TASK"
+let s:BUJO_EVENT = "event"
+let s:bujo_entry_enum = { 
+      \ s:BUJO_EVENT : g:bujo_daily_log_event_header,
+      \ s:BUJO_TASK  : g:bujo_daily_log_task_header,
+      \ s:BUJO_NOTE  : g:bujo_daily_log_note_header
+\ }
 
 " ------------------------------ 
 "  autoload
 " ------------------------------ 
+
 " Paramaters: openJournal: bool, vaargs - each argument is joined in a string
 " to create the journal name
 " Description: Open the index file for a journal or index file of journals
 " Notes: Additional arguments are appended to the 'journal' argument with
 " spaces between
-function! s:open_index(openJournal, ...)
+function! s:open_index(open_journal, ...)
   let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
   let l:journal_dir = expand(g:bujo_path . l:journal)
   let l:journal_index = expand(l:journal_dir . "/index.md")
   
   " Check to see if the journal exists
-  if !isdirectory(l:journal_dir) && !a:openJournal
+  if !isdirectory(l:journal_dir) && !a:open_journal
     let l:choice = confirm("Journal `" .. l:journal .. "` does not exist, would you like to create it?",
                       \ "&Yes\n&No\n&Cancel")
     " No (2), Cancel (3) or Interrupt (0) or an invalid choice
@@ -437,8 +465,8 @@ function! s:open_index(openJournal, ...)
     call mkdir(l:journal_dir, "p", "0o775")
   endif
 
-  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_winsize > 0)? (g:bujo_winsize*winwidth(0))/100 : -g:bujo_winsize) "new" 
-  if a:openJournal
+  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) "new" 
+  if a:open_journal
     setlocal filetype=markdown buftype=nofile noswapfile bufhidden=wipe
     let l:content = ["# Journal Index", ""]
     for entry in readdir(expand(g:bujo_path), {f -> isdirectory(expand(g:bujo_path . f)) && f !~ "^[.]"})
@@ -455,18 +483,123 @@ function! s:open_index(openJournal, ...)
   endif
 endfunction
 
+function! s:init_daily_log(journal, type = v:null, ...)
+  if a:type != v:null && a:0 == 0 
+    let l:match_string = s:bujo_entry_enum[a:type]
+    echoerr "Provided type (" . a:type . ") but did not provide any data to enter"
+  endif
+  let l:entry = a:000
+  let l:daily_log = expand(g:bujo_path . a:journal . "/". strftime(g:bujo_daily_log_filename))
+  let l:content = [strftime(g:bujo_daily_log_header), ""]
+
+  if g:bujo_daily_log_include_event_header != 0
+    if g:bujo_daily_log_include_event_header == 1
+      call add(l:content, g:bujo_daily_log_event_header)
+      if a:type == s:BUJO_EVENT
+        call add(l:content, "* " . l:entry)
+      endif
+      call add(l:content, "* ")
+      call add(l:content, "")
+    elseif g:bujo_daily_log_include_event_header == 2
+      " TODO - implement smart event inclusion in daily log
+      " Will likely come after calendar integration, need a way of finding all live events
+      echoerr "Not implemented!"
+    endif
+  endif
+  if g:bujo_daily_log_include_task_header
+    call add(l:content, g:bujo_daily_log_task_header)
+    if a:type == s:BUJO_TASK
+      call add(l:content, "* " . l:entry)
+    endif
+    call add(l:content, "* ")
+    call add(l:content, "")
+  endif
+  if g:bujo_daily_log_include_note_header
+    call add(l:content, g:bujo_daily_log_note_header)
+    if a:type == s:BUJO_NOTE
+      call add(l:content, l:entry)
+    endif
+    call add(l:content, "")
+  endif
+
+  " Write output to file
+  call writefile(l:content, l:daily_log)
+endfunction
+
+function! s:open_daily_log(...)
+  let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
+  let l:daily_log = expand(g:bujo_path . l:journal . "/". strftime(g:bujo_daily_log_filename))
+  if !filereadable(l:daily_log)
+    call s:init_daily_log(l:journal)
+  endif
+  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
+  execute  "edit " . g:bujo_path . l:journal . "/" . strftime(g:bujo_daily_log_filename)
+  
+endfunction
+
+" TODO: Handle displaying urgent tasks
+function! s:create_entry(type, is_urgent, ...)
+  let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
+  let l:daily_log = expand(g:bujo_path . g:bujo_journal_default_name . "/". strftime(g:bujo_daily_log_filename))
+  if !filereadable(l:daily_log)
+    " We're creating a new file, insert template
+    call s:init_daily_log(g:bujo_journal_default_name)
+  else
+    let l:index = 0
+    let l:content = readfile(l:daily_log)
+    let l:match_string = s:bujo_entry_enum[a:type]
+    for line in l:content
+      let l:index = l:index+1
+      if line == l:match_string
+        call insert(l:content, "* " . l:entry, l:index)
+        call writefile(l:content, l:daily_log)
+        return
+      endif
+    endfor
+
+    " If we reach here, we've failed to locate the header
+    " The only 'safe' way I can conceive to add this in is 
+    " to locate todays header and insert it 2 lines below (leaving blank line below header)
+    call insert(l:content, s:bujo_entry_enum[a:type], 2)
+    call insert(l:content, "* " . l:entry, 3)
+    call insert(l:content, "", 4)
+    call writefile(l:content, l:daily_log)
+  endif
+endfunction
+
 " ------------------------------ 
 "  interface [plugin]
 " ------------------------------ 
-command! -nargs=* -bang BujoIndex call s:open_index(<bang>0, <f-args>)
+command! -nargs=* -bang Index call s:open_index(<bang>0, <f-args>)
+command! -nargs=* -bang Today call s:open_daily_log(<f-args>)
+command! -nargs=+ -bang Task call s:create_entry(s:BUJO_TASK, <bang>0, <f-args>)
+command! -nargs=+ -bang Event call s:create_entry(s:BUJO_EVENT, <bang>0, <f-args>)
+command! -nargs=+ -bang Note call s:create_entry(s:BUJO_NOTE, <bang>0, <f-args>)
 " Creating command names to guage what is wanted/needed 
 " Creating the 'black box' based on that
 " APIs here are just template
-" command! -nargs=+ -bang BujoTask call s:create_task(<bang>0, <f-args>)
-" command! -nargs=+ -bang BujoEvent call s:create_event(<bang>0, <f-args>)
-" command! -nargs=* -bang BujoContainer call s:create_container(<bang>0, <f-args>)
-" command! -nargs=* -bang BujoTaskList call s:list_tasks(<bang>0, <f-args>)
-" command! -nargs=* -bang BujoEventList call s:list_events(<bang>0, <f-args>)
+" command! -nargs=* -bang Container call s:create_container(<bang>0, <f-args>)
+" command! -nargs=* -bang TaskList call s:list_tasks(<bang>0, <f-args>)
+" command! -nargs=* -bang EventList call s:list_events(<bang>0, <f-args>)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
