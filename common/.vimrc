@@ -102,6 +102,7 @@ Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': 'npm ci'}
 Plug 'mattn/calendar-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+Plug 'dhruvasagar/vim-zoom'
 
 " UI
 Plug 'markonm/traces.vim'
@@ -202,7 +203,7 @@ let g:rainbow_conf = {
 let g:lightline = {
   \ 'colorscheme': 'sonokai',
   \ 'active': {
-  \   'left': [ [ 'mode', 'paste' ], [ 'gitbranch' ], [ 'readonly', 'pwd', 'relativepath', 'modified' ] ],
+  \   'left': [ [ 'mode', 'zoomed', 'paste' ], [ 'gitbranch' ], [ 'readonly', 'pwd', 'relativepath', 'modified' ] ],
   \   'right': [ [ 'filetype', 'fileencoding', 'fileformat'  ],  [ 'lineinfo', 'percent' ]],
   \ },
   \ 'inactive': {
@@ -212,6 +213,7 @@ let g:lightline = {
   \ 'component_function': {
   \   'gitbranch':'FugitiveHead',
   \   'pwd': 'RelativeOrAbsolutePath',
+  \   'zoomed': "zoom#statusline"
   \ },
   \ 'component': {
   \   'lineinfo': '%3l:%-2v%<',
@@ -359,6 +361,8 @@ tnoremap <silent><C-.> :tabmove+<CR>
 
 " Make ctrl + backspace work like normal in insert and command mode
 noremap! <C-BS> <C-W>
+
+nmap <C-w>z <Plug>(zoom-toggle)
 
 " short hands for Git Gutter magic
 cnoreabbrev ShowChanges GitGutterLineHighlightsEnable
