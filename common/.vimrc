@@ -468,9 +468,9 @@ function! s:open_index(open_journal, ...)
     call mkdir(l:journal_dir, "p", "0o775")
   endif
 
-  let l:cmd = (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) 
+  let l:cmd = (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) . "new" 
   if a:open_journal
-    execute l:cmd . "new" 
+    execute l:cmd 
     setlocal filetype=markdown buftype=nofile noswapfile bufhidden=wipe
     let l:content = ["# Journal Index", ""]
     for entry in readdir(expand(g:bujo_path), {f -> isdirectory(expand(g:bujo_path . f)) && f !~ "^[.]"})
@@ -479,7 +479,6 @@ function! s:open_index(open_journal, ...)
     call append(0, l:content)
     setlocal readonly nomodifiable
   else
-    let l:x = confirm("a", "&a,&b")
     let l:index_path = expand(g:bujo_path . l:journal . "/index.md")  
     if !filereadable(l:index_path)
       let l:content = [substitute(substitute(g:bujo_journal_index_header, "{journal}", l:journal, "g"), "\\<\\([a-z]\\)", "\\U\\1", "g"), ""]
@@ -487,10 +486,10 @@ function! s:open_index(open_journal, ...)
       if g:bujo_journal_init_include_monthly == v:true | call add(l:content, strftime("[2. Monthly Log](monthly_%Y-%M)")) | endif
       if g:bujo_journal_init_include_daily == v:true | call add(l:content, strftime("[3. Daily Log](daily_%Y-%M)")) | endif
       call append(0, l:content)
-      " TODO - figure out why this keeps not saving the file properly before opening it 
       call writefile(l:content, l:index_path)
     endif
-    execute l:cmd ."edit " . l:index_path
+    execute l:cmd 
+    execute "edit " . l:index_path
   endif
 endfunction
 
