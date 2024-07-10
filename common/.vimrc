@@ -405,3 +405,68 @@ noremap  <silent><C-n> :Lexplore<CR>
 noremap! <silent><C-n> <Esc>:Lexplore<CR>
 tnoremap <silent><C-n> :Lexplore<CR>
 
+" ------------------------------ 
+" Bullet Journal WIP
+
+let g:bujo_path = '~/repos/bujo/'
+let g:bujo_journal_default_name = "default"
+let g:bujo_winsize = 30
+
+" ------------------------------ 
+"  autoload
+" ------------------------------ 
+" Paramaters: openJournal: bool, vaargs - each argument is joined in a string
+" to create the journal name
+" Description: Open the index file for a journal or index file of journals
+" Notes: Additional arguments are appended to the 'journal' argument with
+" spaces between
+function! s:open_index(openJournal, ...)
+  let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
+  let l:journal_dir = expand(g:bujo_path . l:journal)
+  let l:journal_index = expand(l:journal_dir . "/index.md")
+  
+  " Check to see if the journal exists
+  if !isdirectory(l:journal_dir) && !a:openJournal
+    let l:choice = confirm("Journal `" .. l:journal .. "` does not exist, would you like to create it?",
+                      \ "&Yes\n&No\n&Cancel")
+    " No (2), Cancel (3) or Interrupt (0) or an invalid choice
+    if l:choice != 1 
+      echo "Aborting journal creation." 
+      return 
+    endif
+    call mkdir(l:journal_dir, "p", "0o775")
+  endif
+
+  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_winsize > 0)? (g:bujo_winsize*winwidth(0))/100 : -g:bujo_winsize) "new" 
+  if a:openJournal
+    setlocal filetype=markdown buftype=nofile noswapfile bufhidden=wipe
+    let l:content = ["# Journal Index", ""]
+    for entry in readdir(expand(g:bujo_path), {f -> isdirectory(expand(g:bujo_path . f)) && f !~ "^[.]"})
+      call add(l:content, "- [" . substitute(entry, "\\<\\([a-z]\\)", "\\U\\1", "g") . "]( " . entry . "/index.md" . " )")
+    endfor
+    call append(0, l:content)
+    setlocal readonly nomodifiable
+  else
+    execute  "edit " . g:bujo_path . l:journal . "/index.md" 
+    if search("# " . substitute(l:journal, "\\<\\([a-z]\\)", "\\U\\1", "g") . " Index") == 0
+      let l:content = ["# " . substitute(l:journal, "\\<\\([a-z]\\)", "\\U\\1", "g") . " Index", ""]
+      call append(0, l:content)
+    endif
+  endif
+endfunction
+
+" ------------------------------ 
+"  interface [plugin]
+" ------------------------------ 
+command! -nargs=* -bang BujoIndex call s:open_index(<bang>0, <f-args>)
+" Creating command names to guage what is wanted/needed 
+" Creating the 'black box' based on that
+" APIs here are just template
+" command! -nargs=+ -bang BujoTask call s:create_task(<bang>0, <f-args>)
+" command! -nargs=+ -bang BujoEvent call s:create_event(<bang>0, <f-args>)
+" command! -nargs=* -bang BujoContainer call s:create_container(<bang>0, <f-args>)
+" command! -nargs=* -bang BujoTaskList call s:list_tasks(<bang>0, <f-args>)
+" command! -nargs=* -bang BujoEventList call s:list_events(<bang>0, <f-args>)
+
+
+
