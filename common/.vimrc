@@ -483,6 +483,8 @@ function! s:open_index(open_journal, ...)
     let l:index_path = expand(g:bujo_path . l:journal . "/index.md")  
     if !filereadable(l:index_path)
       let l:content = [substitute(substitute(g:bujo_journal_index_header, "{journal}", l:journal, "g"), "\\<\\([a-z]\\)", "\\U\\1", "g"), ""]
+      " TODO - The numbering here could be wrong if people toggle things off 
+      " Introduce counter and increment when adding a line
       if g:bujo_journal_init_include_future == v:true | call add(l:content, strftime("[1. Future Log](future_%Y)")) | endif
       if g:bujo_journal_init_include_monthly == v:true | call add(l:content, strftime("[2. Monthly Log](monthly_%Y-%M)")) | endif
       if g:bujo_journal_init_include_daily == v:true | call add(l:content, strftime("[3. Daily Log](daily_%Y-%M)")) | endif
