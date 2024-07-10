@@ -420,6 +420,7 @@ let g:bujo_index_template_include_daily = v:true
 " as function will just replace and open file based on what set here
 " so %Y-%m-%d (aka. 2024-07-10) or %Y-%m (aka. 2024-07) etc.
 let g:bujo_daily_log_filename = "daily_%Y-%m.md"
+let g:bujo_journal_index_header = "# {journal} Index"
 let g:bujo_daily_log_header =  "# %A %B %d" 
 let g:bujo_daily_log_task_header =  "**Tasks:**" 
 let g:bujo_daily_log_event_header =  "**Events:**" 
@@ -475,11 +476,13 @@ function! s:open_index(open_journal, ...)
     call append(0, l:content)
     setlocal readonly nomodifiable
   else
-    execute  "edit " . g:bujo_path . l:journal . "/index.md" 
-    if search("# " . substitute(l:journal, "\\<\\([a-z]\\)", "\\U\\1", "g") . " Index") == 0
-      let l:content = ["# " . substitute(l:journal, "\\<\\([a-z]\\)", "\\U\\1", "g") . " Index", ""]
+    let l:index_path = expand(g:bujo_path . l:journal . "/index.md")  
+    if !filereadable(l:index_path)
+      let l:content = [substitute(substitute(g:bujo_journal_index_header, "{journal}", l:journal, "g"), "\\<\\([a-z]\\)", "\\U\\1", "g"), ""]
       call append(0, l:content)
+      call writefile(l:content, l:index_path)
     endif
+    execute  "edit " . l:index_path
   endif
 endfunction
 
