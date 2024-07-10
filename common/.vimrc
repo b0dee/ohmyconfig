@@ -422,17 +422,17 @@ let g:bujo_index_template_include_daily = v:true
 let g:bujo_daily_log_filename = "daily_%Y-%m.md"
 let g:bujo_journal_index_header = "# {journal} Index"
 let g:bujo_daily_log_header =  "# %A %B %d" 
-let g:bujo_daily_log_task_header =  "**Tasks:**" 
-let g:bujo_daily_log_event_header =  "**Events:**" 
-let g:bujo_daily_log_note_header =  "**Notes:**" 
+let g:bujo_daily_log_task_header =  "## Tasks:" 
+let g:bujo_daily_log_event_header =  "## Events:" 
+let g:bujo_daily_log_note_header =  "## Notes:" 
 let g:bujo_daily_log_include_task_header = v:true
 let g:bujo_daily_log_include_note_header = v:true
 " 0 = Don't include header
 " 1 = Include header
-" TODO 2 = Smart inclusion only if events scheduled for this day
+" TODO - 2 = Smart inclusion only if events scheduled for this day
 let g:bujo_daily_log_include_event_header = 0
 let s:BUJO_NOTE = "note"
-let s:BUJO_TASK = "TASK"
+let s:BUJO_TASK = "task"
 let s:BUJO_EVENT = "event"
 let s:bujo_entry_enum = { 
       \ s:BUJO_EVENT : g:bujo_daily_log_event_header,
@@ -443,6 +443,11 @@ let g:bujo_journal_init_include_future = v:true
 let g:bujo_journal_init_include_monthly = v:true
 let g:bujo_journal_init_include_daily  = v:true
 let g:bujo_journal_init_include_backlog  = v:true
+" TODO - Add customisable list elements
+" i.e. let g:bujo_migrated_to_future = '<' -- Migrated to future log
+"      > = Migrated to next week look
+" etc
+
 " ------------------------------ 
 "  autoload
 " ------------------------------ 
@@ -594,9 +599,13 @@ command! -nargs=+ -bang Note call s:create_entry(s:BUJO_NOTE, <bang>0, <f-args>)
 " Creating command names to guage what is wanted/needed 
 " Creating the 'black box' based on that
 " APIs here are just template
+" command! -nargs=* -bang Future call s:open_future_log(<bang>0, <f-args>) -- bang is to create a new entry, vaargs indicate month and entry
+" command! -nargs=* -bang Backlog call s:open_backlog(<bang>0, <f-args>) -- bang is to create a new entry, vaargs indicate entry
+" command! -nargs=* -bang Monthly call s:open_monthly_log(<bang>0, <f-args>)
 " command! -nargs=* -bang Container call s:create_container(<bang>0, <f-args>)
 " command! -nargs=* -bang TaskList call s:list_tasks(<bang>0, <f-args>)
 " command! -nargs=* -bang EventList call s:list_events(<bang>0, <f-args>)
+" command! -nargs=* -bang  call s:open_monthly_log(<bang>0, <f-args>)
 
 
 
