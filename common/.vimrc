@@ -490,6 +490,7 @@ function! s:init_daily_log(journal, type = v:null, ...)
   if a:type != v:null && a:0 == 0 
     let l:match_string = s:bujo_entry_enum[a:type]
     echoerr "Provided type (" . a:type . ") but did not provide any data to enter"
+    return
   endif
   let l:entry = a:000
   let l:daily_log = expand(g:bujo_path . a:journal . "/". strftime(g:bujo_daily_log_filename))
