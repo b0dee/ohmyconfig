@@ -439,7 +439,9 @@ let s:bujo_entry_enum = {
       \ s:BUJO_TASK  : g:bujo_daily_log_task_header,
       \ s:BUJO_NOTE  : g:bujo_daily_log_note_header
 \ }
-
+let g:bujo_journal_init_include_future = v:true
+let g:bujo_journal_init_include_monthly = v:true
+let g:bujo_journal_init_include_daily  = v:true
 " ------------------------------ 
 "  autoload
 " ------------------------------ 
@@ -466,8 +468,9 @@ function! s:open_index(open_journal, ...)
     call mkdir(l:journal_dir, "p", "0o775")
   endif
 
-  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) "new" 
+  let l:cmd = (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) 
   if a:open_journal
+    execute l:cmd . "new" 
     setlocal filetype=markdown buftype=nofile noswapfile bufhidden=wipe
     let l:content = ["# Journal Index", ""]
     for entry in readdir(expand(g:bujo_path), {f -> isdirectory(expand(g:bujo_path . f)) && f !~ "^[.]"})
@@ -476,13 +479,18 @@ function! s:open_index(open_journal, ...)
     call append(0, l:content)
     setlocal readonly nomodifiable
   else
+    let l:x = confirm("a", "&a,&b")
     let l:index_path = expand(g:bujo_path . l:journal . "/index.md")  
     if !filereadable(l:index_path)
       let l:content = [substitute(substitute(g:bujo_journal_index_header, "{journal}", l:journal, "g"), "\\<\\([a-z]\\)", "\\U\\1", "g"), ""]
+      if g:bujo_journal_init_include_future == v:true | call add(l:content, strftime("[1. Future Log](future_%Y)")) | endif
+      if g:bujo_journal_init_include_monthly == v:true | call add(l:content, strftime("[2. Monthly Log](monthly_%Y-%M)")) | endif
+      if g:bujo_journal_init_include_daily == v:true | call add(l:content, strftime("[3. Daily Log](daily_%Y-%M)")) | endif
       call append(0, l:content)
+      " TODO - figure out why this keeps not saving the file properly before opening it 
       call writefile(l:content, l:index_path)
     endif
-    execute  "edit " . l:index_path
+    execute l:cmd ."edit " . l:index_path
   endif
 endfunction
 
@@ -563,7 +571,8 @@ function! s:create_entry(type, is_urgent, ...)
 
     " If we reach here, we've failed to locate the header
     " The only 'safe' way I can conceive to add this in is 
-    " to locate todays header and insert it 2 lines below (leaving blank line below header)
+    " to locate todays header and insert it 2 lines below 
+    " (leaving blank line below header)
     call insert(l:content, s:bujo_entry_enum[a:type], 2)
     call insert(l:content, "* " . l:entry, 3)
     call insert(l:content, "", 4)
