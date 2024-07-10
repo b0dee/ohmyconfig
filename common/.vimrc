@@ -442,6 +442,7 @@ let s:bujo_entry_enum = {
 let g:bujo_journal_init_include_future = v:true
 let g:bujo_journal_init_include_monthly = v:true
 let g:bujo_journal_init_include_daily  = v:true
+let g:bujo_journal_init_include_backlog  = v:true
 " ------------------------------ 
 "  autoload
 " ------------------------------ 
@@ -485,6 +486,7 @@ function! s:open_index(open_journal, ...)
       if g:bujo_journal_init_include_future == v:true | call add(l:content, strftime("[1. Future Log](future_%Y)")) | endif
       if g:bujo_journal_init_include_monthly == v:true | call add(l:content, strftime("[2. Monthly Log](monthly_%Y-%M)")) | endif
       if g:bujo_journal_init_include_daily == v:true | call add(l:content, strftime("[3. Daily Log](daily_%Y-%M)")) | endif
+      if g:bujo_journal_init_include_backlog == v:true | call add(l:content, strftime("[4. Backlog](backlog)")) | endif
       call append(0, l:content)
       call writefile(l:content, l:index_path)
     endif
