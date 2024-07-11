@@ -492,6 +492,11 @@ let g:bujo_months = [
 " ------------------------------ 
 
 function! s:mkdir_if_needed(journal = v:null)
+  let l:journal_dir = expand(g:bujo_path . a:journal)
+  if isdirectory(l:journal_dir)
+    return
+	endif
+
   let l:journal_print_name = substitute(a:journal, "\\<\\([a-z]\\)", "\\U\\1", "g")
   let l:choice = confirm("Creating new journal `" . l:journal_print_name . "`. Continue Y/n (default: yes)?",
                         \ "&Yes\n&No")
@@ -499,8 +504,8 @@ function! s:mkdir_if_needed(journal = v:null)
     echo "Aborting journal creation"
     return
   endif
-  let l:journal_dir = expand(g:bujo_path . a:journal)
-  if !isdirectory(l:journal_dir) | call mkdir(l:journal_dir, "p", "0o775") | endif
+
+  call mkdir(l:journal_dir, "p", "0o775")
 endfunction
 
 " Paramaters: openJournal: bool, vaargs - each argument is joined in a string
