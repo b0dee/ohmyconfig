@@ -847,3 +847,27 @@ command! -nargs=+ Container call s:create_container(<f-args>)
 
 
 
+" ~~~~~~~~~~~~~~
+" Notes
+" ~~~~~~~~~~~~~~
+" TODO - vim-bujo 
+" - make files saved replace spaces with underscores
+" - migration functionality
+" - motions to navigate/ prepopulate command
+" - set filetype, link syntax with markdown, and introduce motions within files i.e. '<leader><<' in daily log can prompt
+"   user to specify month and will migrate entry to future log etc.
+" TODO - AutoPairs
+" - Fix inserting closing paren when we there already exists one
+" TODO - Markdown
+" - fix markdown opening local file links
+" 
+" vim-bujo Ideas: 
+" - Having commands be smart enough to put things under appropriate header when in format of 
+"  `:Backlog An Example Header With Spaces: Task To Be added with spaces`
+"   would create a task in backlog under heading 'An Example Header With Spaces' with task `Task To Be added with spaces`
+" - Having a shortcut to allow for quick migration to next week/ back to future log (>> and <<)
+" - Since we want to have ability to migrate by week for example, would need to introduce way to have future days in 
+"   daily log while still putting entries into correct day, so would need to iterate through lines until we found todays
+"   entry, then foud the appropriate type to enter it under
+" - Switch to have entries append to list rather than insert at the top. This work will be needed for containers anyhow
+"   (as they are being put into index rather than a log). 
