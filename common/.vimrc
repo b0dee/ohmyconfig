@@ -437,6 +437,25 @@ let s:BUJO_BACKLOG = "backlog"
 let s:BUJO_MONTHLY = "monthly"
 let s:BUJO_FUTURE = "future"
 let g:bujo_default_list_char = "*"
+let g:bujo_index_list_char = "{#}"
+let g:bujo_index_entries = [
+\ { 
+\  "name": "Future Log",
+\  "file": "future_%Y",
+\ },
+\ { 
+\   "name": "Monthly Log",
+\   "file": "monthly_%Y",
+\ },
+\ { 
+\   "name": "Daily Log",
+\   "file": "daily_%Y-%m",
+\ },
+\ { 
+\   "name": "Backlog",
+\   "file": "backlog",
+\ }
+\]
 let g:bujo_entries_order = [
 \ s:BUJO_EVENT,
 \ s:BUJO_TASK,
@@ -528,25 +547,12 @@ function! s:init_journal_index(journal)
   if filereadable(l:journal_index) | return | endif
 
   let l:content = [s:format_header(g:bujo_journal_index_header, l:journal_print_name), ""]
-  let l:counter = 1
-  if g:bujo_journal_init_include_future
-    call add(l:content, strftime("[" . l:counter . ". Future Log](future_%Y)"))      
+  let l:counter = 0
+  for key in g:bujo_index_entries
     let l:counter += 1
-  endif
-  if g:bujo_journal_init_include_monthly
-    call add(l:content, strftime("[" . l:counter . ". Monthly Log](monthly_%Y-%M)")) 
-    let l:counter += 1
-  endif
-  if g:bujo_journal_init_include_daily
-    call add(l:content, strftime("[" . l:counter . ". Daily Log](daily_%Y-%M)"))     
-    let l:counter += 1
-  endif
-  if g:bujo_journal_init_include_backlog
-    call add(l:content, strftime("[" . l:counter . ". Backlog](backlog)"))           
-    let l:counter += 1
-  endif
+    call add(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter . ".", "g") . " [" . key["name"] . "](" . key["file"] . ")")
+  endfor
   call writefile(l:content, l:journal_index)
-
 endfunction
 
 " Paramaters: openJournal: bool, vaargs - each argument is joined in a string
@@ -632,7 +638,7 @@ function! s:open_daily_log(...)
   
 endfunction
 
-function! s:insert_entry_into_list(list, type, entry, kind)
+function! s:list_insert(list, type, entry, kind)
   let l:index = 0
   for line in a:list
     let l:index += 1
@@ -646,15 +652,34 @@ function! s:insert_entry_into_list(list, type, entry, kind)
   " The only 'safe' way I can conceive to add this in is 
   " to locate todays header and insert it 2 lines below 
   " (leaving blank line below header)
-  call insert(a:list, g:bujo_entries[type]["header"], 2)
+  call insert(a:list, g:bujo_entries[a:type]["header"], 2)
   call insert(a:list, g:bujo_default_list_char . " " . l:entry, 3)
   call insert(a:list, "", 4)
   return a:list
 endfunction
 
-function! s:append_entry_to_list(list, type, entry) 
-  echoerr "s:append_entry_to_list Not Implemented!"
-  return
+function! s:list_append(list, type, entry) 
+  let l:index = 0
+  for line in a:list
+    let l:index += 1
+    if line ==# g:bujo_entries[a:type]["header"] && g:bujo_entries[a:type][a:kind . "_enabled"]
+      for item in a:list[l:index - 1:-1]
+        if item !=# g:bujo_index_entries[a:type]["list_char"]
+          call insert(a:list, a:entry, l:index - 1)
+        endif
+      endfor
+      return a:list
+    endif
+  endfor
+
+  " If we reach here, we've failed to locate the header
+  " The only 'safe' way I can conceive to add this in is 
+  " to locate todays header and insert it 2 lines below 
+  " (leaving blank line below header)
+  call insert(a:list, g:bujo_entries[a:type]["header"], 2)
+  call insert(a:list, g:bujo_default_list_char . " " . l:entry, 3)
+  call insert(a:list, "", 4)
+  return a:list
 endfunction
 
 " TODO: Handle displaying urgent tasks
@@ -664,7 +689,7 @@ function! s:create_entry(type, is_urgent, ...)
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
   call s:init_daily_log(g:bujo_journal_default_name)
   let l:content = readfile(l:daily_log)
-  call writefile(s:insert_entry_into_list(l:content, a:type, g:bujo_entries[a:type]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
+  call writefile(s:list_insert(l:content, a:type, g:bujo_entries[a:type]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
 endfunction
 
 " TODO - Implement new_entry logic
@@ -698,20 +723,48 @@ function! s:open_future_log(new_entry, ...)
     echoerr "Future Log Quick Creation not implemented!"
     return
     let l:content = readfile(l:daily_log)
-    call writefile(s:insert_entry_into_list(l:content, a:type, g:bujo_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
+    call writefile(s:list_insert(l:content, a:type, g:bujo_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
   endif
 endfunction
 
 function! s:create_container(...)
-  if a:0 === 0 
+  if a:0 == 0 
     echoerr "create_container() requires at least 1 argment. Aborting."
     return
   endif
 
+  let l:container = join(a:000, " ")
+  let l:container_print_name = substitute(l:container, "\\<\\([a-z]\\)", "\\U\\1", "g")
+
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
 
-  let l:journal_index = expand(g:bujo_path . g:bujo_journal_default_name) 
-  call s:init_journal_index(l:journal)
+  let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
+  let l:journal_index = expand(l:journal_dir . "/index.md")
+  let l:container_path = expand(l:journal_dir . "/" . l:container . ".md")
+
+  call s:init_journal_index(g:bujo_journal_default_name)
+
+  " Add the entry to index
+  let l:content = readfile(l:journal_index)
+  " Skip the first 2 lines, these will always be the index header and a new line
+  let l:counter = 0
+  for line in l:content[2:-1]
+    let l:counter += 1
+    " Account for the case where we are at EOF and no empty newline
+    if line !~# substitute(g:bujo_index_list_char, "{#}", l:counter . ". ", "g") 
+      call insert(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter, "g") . ". [" . l:container_print_name . "](" . l:container_path . ")", l:counter + 1)
+      break
+    elseif line ==# l:content[-1] && len(l:content) == l:counter + 2
+      call add(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter + 1, "g") . ". [" . l:container_print_name . "](" . l:container_path . ")")
+    endif
+  endfor
+  call writefile(l:content, l:journal_index)
+
+  let l:content = [ "# " . l:container_print_name, "", "" ]
+  call writefile(l:content, l:container_path)
+
+  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
+  execute  "edit " . l:container_path
 
 endfunction
 
@@ -739,7 +792,7 @@ function! s:open_backlog(open_backlog, ...)
   if a:0 != 0
     let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:backlog)
-    call writefile(s:insert_entry_into_list(l:content, s:BUJO_TASK, g:bujo_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
+    call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
   endif
   if a:open_backlog
     execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
@@ -760,11 +813,11 @@ command! -nargs=+ -bang Note call s:create_entry(s:BUJO_NOTE, <bang>0, <f-args>)
 " Notes: Providing '!' causes it to open backlog, otherwise just add entry to list
 command! -nargs=* -bang Backlog call s:open_backlog(<bang>0, <f-args>)
 command! -nargs=* -bang Future call s:open_future_log(<bang>0, <f-args>) 
+command! -nargs=+ Container call s:create_container(<f-args>)
 " Creating command names to guage what is wanted/needed 
 " Creating the 'black box' based on that
 " APIs here are just template
 " command! -nargs=* -bang Monthly call s:open_monthly_log(<bang>0, <f-args>)
-" command! -nargs=* -bang Container call s:create_container(<bang>0, <f-args>)
 " command! -nargs=* -bang TaskList call s:list_tasks(<bang>0, <f-args>)
 " command! -nargs=* -bang EventList call s:list_events(<bang>0, <f-args>)
 " command! -nargs=* -bang  call s:open_monthly_log(<bang>0, <f-args>)
