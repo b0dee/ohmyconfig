@@ -968,6 +968,9 @@ command! -nargs=* -bang Monthly call s:open_monthly(<bang>0, <f-args>)
 " - Fix inserting closing paren when we there already exists one
 " TODO - Markdown
 " - fix markdown opening local file links
+" TODO - vim-zoom
+" - Fork and add in a scratch buffer, created/destroyed on toggle to prevent quit during zoom 
+"   (perhaps autocmd restore state if go into this window)
 " 
 " vim-bujo Ideas: 
 " - Having commands be smart enough to put things under appropriate header when in format of 
