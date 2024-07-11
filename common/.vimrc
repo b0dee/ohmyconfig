@@ -458,7 +458,7 @@ let g:bujo_header_entries = {
 \ s:BUJO_TASK : {
 \   "name": s:BUJO_TASK,
 \   "header": g:bujo_daily_task_header,
-\   "list_char": "*",
+\   "list_char": "- [ ]",
 \   "daily_enabled": v:true,
 \   "future_enabled": v:true,
 \   "monthly_enabled": v:true,
