@@ -484,6 +484,10 @@ let g:bujo_daily_include_event_header = 0
 " Future Log vars
 let g:bujo_future_filename = "future_%Y.md"
 let g:bujo_future_header =  "# {journal} Future Log - %Y" 
+" Available replacements: 
+" - Long month name: %B
+" - Short month name: %b
+let g:bujo_future_month_header =  "# %B" 
 
 " Monthly Log vars
 let g:bujo_monthly_filename = "monthly_%Y_%m.md"
@@ -589,8 +593,8 @@ function! s:mkdir_if_needed(journal = v:null)
   return v:false
 endfunction
 
-function! s:format_header(header, journal = v:null) 
-  return strftime(substitute(a:header, "{journal}", a:journal, "g"))
+function! s:format_header(header, journal = g:bujo_journal_default_name) 
+  return strftime(substitute(a:header, "{journal}", substitute(a:journal, "\\<\\([a-z]\\)", "\\U\\1", "g"), "g"))
 endfunction
 
 function! s:init_journal_index(journal)
@@ -643,7 +647,7 @@ function! s:open_index(open_journal, ...)
   endif
 endfunction
 
-function! s:init_daily_log(journal)
+function! s:init_daily(journal)
   " Check if we've already initialised today's log
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
   let l:daily_log = expand(g:bujo_path . a:journal . "/". strftime(g:bujo_daily_filename))
@@ -682,11 +686,11 @@ function! s:init_daily_log(journal)
   call writefile(l:content, l:daily_log)
 endfunction
 
-function! s:open_daily_log(...)
+function! s:open_daily(...)
   let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
   let l:daily_log = expand(g:bujo_path . l:journal . "/". strftime(g:bujo_daily_filename))
-  call s:init_daily_log(l:journal)
+  call s:init_daily(l:journal)
   execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
   execute  "edit " . l:daily_log
   
@@ -741,22 +745,25 @@ function! s:create_entry(type, is_urgent, ...)
   let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
   let l:daily_log = expand(g:bujo_path . g:bujo_journal_default_name . "/". strftime(g:bujo_daily_filename))
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
-  call s:init_daily_log(g:bujo_journal_default_name)
+  call s:init_daily(g:bujo_journal_default_name)
   let l:content = readfile(l:daily_log)
   call writefile(s:list_insert(l:content, a:type, g:bujo_header_entries[a:type]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
 endfunction
 
 " TODO - Implement new_entry logic
 " This needs to handle for month selected (required)
-function! s:open_future_log(new_entry, ...)
+function! s:open_future(new_entry, ...)
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-  let l:future_log = l:journal_dir . g:bujo_future_filename 
+  let l:future_log = l:journal_dir . "/" . s:format_header(g:bujo_future_filename) 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
 
   if !filereadable(l:future_log)
     let l:content = []
+    call add(l:content, s:format_header(g:bujo_future_header))
+    call add(l:content, "")
     for month in g:bujo_months
-      call add(l:content, s:format_header(g:bujo_future_header))
+      " TODO - This **will** break between systems. Will need to add a conditional to decide what to go with when we encounter it
+      call add(l:content, substitute(substitute(g:bujo_future_month_header, "%B", month["long"], "g"), "%b", month["short"], "g"))
       call add(l:content, "")
       for key in g:bujo_header_entries_ordered
         if g:bujo_header_entries[key]["future_enabled"]
@@ -854,7 +861,7 @@ function! s:open_backlog(open_backlog, ...)
   endif
 endfunction
 
-function! s:open_monthly_log(create_entry_only, ...)
+function! s:open_monthly(create_entry_only, ...)
   if a:0 > 0 && a:0 < 2
     echoerr "Monthly command requires at least 2 arguments if providing any."
     return
@@ -921,16 +928,16 @@ endfunction
 "  interface [plugin]
 " ------------------------------ 
 command! -nargs=* -bang Index call s:open_index(<bang>0, <f-args>)
-command! -nargs=* -bang Today call s:open_daily_log(<f-args>)
+command! -nargs=* -bang Today call s:open_daily(<f-args>)
 command! -nargs=+ -bang Task call s:create_entry(s:BUJO_TASK, <bang>0, <f-args>)
 command! -nargs=+ -bang Event call s:create_entry(s:BUJO_EVENT, <bang>0, <f-args>)
 command! -nargs=+ -bang Note call s:create_entry(s:BUJO_NOTE, <bang>0, <f-args>)
 " Backlog:
 " Notes: Providing '!' causes it to open backlog, otherwise just add entry to list
 command! -nargs=* -bang Backlog call s:open_backlog(<bang>0, <f-args>)
-command! -nargs=* -bang Future call s:open_future_log(<bang>0, <f-args>) 
+command! -nargs=* -bang Future call s:open_future(<bang>0, <f-args>) 
 command! -nargs=+ Container call s:create_container(<f-args>)
-command! -nargs=* -bang Monthly call s:open_monthly_log(<bang>0, <f-args>)
+command! -nargs=* -bang Monthly call s:open_monthly(<bang>0, <f-args>)
 " Creating command names to guage what is wanted/needed 
 " Creating the 'black box' based on that
 " APIs here are just template
