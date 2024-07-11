@@ -881,6 +881,15 @@ command! -nargs=+ Container call s:create_container(<f-args>)
 " - motions to navigate/ prepopulate command
 " - set filetype, link syntax with markdown, and introduce motions within files i.e. '<leader><<' in daily log can prompt
 "   user to specify month and will migrate entry to future log etc.
+" - Implement Commands: 
+"   - RenameJournal
+"     - bang: false
+"   - RenameContainer
+"     - bang: false
+"   - Tasks
+"     - bang: false
+"   - Events
+"     - bang: false
 " TODO - AutoPairs
 " - Fix inserting closing paren when we there already exists one
 " TODO - Markdown
