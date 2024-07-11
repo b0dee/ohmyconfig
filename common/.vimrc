@@ -491,6 +491,18 @@ let g:bujo_months = [
 "  autoload
 " ------------------------------ 
 
+function! s:mkdir_if_needed(journal = v:null)
+  let l:journal_print_name = substitute(a:journal, "\\<\\([a-z]\\)", "\\U\\1", "g")
+  let l:choice = confirm("Creating new journal `" . l:journal_print_name . "`. Continue Y/n (default: yes)?",
+                        \ "&Yes\n&No")
+  if choice != 1 
+    echo "Aborting journal creation"
+    return
+  endif
+  let l:journal_dir = expand(g:bujo_path . a:journal)
+  if !isdirectory(l:journal_dir) | call mkdir(l:journal_dir, "p", "0o775") | endif
+endfunction
+
 " Paramaters: openJournal: bool, vaargs - each argument is joined in a string
 " to create the journal name
 " Description: Open the index file for a journal or index file of journals
@@ -503,7 +515,9 @@ function! s:open_index(open_journal, ...)
   let l:journal_index = expand(l:journal_dir . "/index.md")
   
   " Check to see if the journal exists
-  if !isdirectory(l:journal_dir) && !a:open_journal | call mkdir(l:journal_dir, "p", "0o775") | endif
+  if !a:open_journal
+    call s:mkdir_if_needed(l:journal)
+  endif
 
   let l:cmd = (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) . "new" 
   if a:open_journal
@@ -554,7 +568,7 @@ function! s:init_daily_log(journal, type = v:null, ...)
   let l:content = [strftime(g:bujo_daily_log_header), ""]
 
   " Check to see if the journal exists
-  if !isdirectory(l:journal_dir) | call mkdir(l:journal_dir, "p", "0o775") | endif
+  call s:mkdir_if_needed(l:journal)
 
   for key in g:bujo_entries_order
     if g:bujo_entries[key]["daily_log_enabled"]
@@ -628,7 +642,7 @@ endfunction
 function! s:open_future_log(new_entry, ...)
   if !new_entry
     let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name 
-    if !isdirectory(l:journal_dir) | call mkdir(l:journal_dir, "p", "0o775") | endif
+    call s:mkdir_if_needed(g:bujo_journal_default_name)
     if !filereadable(l:journal_dir . "/future_log.md"))
       let l:content = []
       for month in g:bujo_months
