@@ -645,18 +645,28 @@ function! s:create_entry(type, is_urgent, ...)
 endfunction
 
 function! s:open_future_log(new_entry, ...)
-  if !new_entry
-    let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name 
+  if !a:new_entry
+    let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
+    let l:future_log = l:journal_dir . "/future_log.md" 
     call s:mkdir_if_needed(g:bujo_journal_default_name)
-    if !filereadable(l:journal_dir . "/future_log.md"))
+    if !filereadable(l:future_log)
       let l:content = []
       for month in g:bujo_months
-        call add(l:content, substitute(substitute(g:bujo_future_log_header, "{month-long}", month["long"], "g"), "{month-short}", "g"))
-        call extend(l:content, ["",""])
+        call add(l:content, substitute(substitute(g:bujo_future_log_header, "{month-long}", month["long"], "g"), "{month-short}", month["short"], "g"))
+        call add(l:content, "")
+        for key in g:bujo_entries_order
+          if g:bujo_entries[key]["future_log_enabled"]
+            call add(l:content, g:bujo_entries[key]["header"])
+            call add(l:content, g:bujo_entries[key]["list_char"] . " ")
+            call add(l:content, "")
+          endif
+        endfor
+        call add(l:content, "")
+        call writefile(l:content, l:future_log)
       endfor
     endif
     execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
-    execute  "edit " . l:journal_dir . "/future_log.md"
+    execute  "edit " . l:future_log
   endif
 endfunction
 
@@ -668,6 +678,7 @@ command! -nargs=* -bang Today call s:open_daily_log(<f-args>)
 command! -nargs=+ -bang Task call s:create_entry(s:BUJO_TASK, <bang>0, <f-args>)
 command! -nargs=+ -bang Event call s:create_entry(s:BUJO_EVENT, <bang>0, <f-args>)
 command! -nargs=+ -bang Note call s:create_entry(s:BUJO_NOTE, <bang>0, <f-args>)
+command! -nargs=* -bang Future call s:open_future_log(<bang>0, <f-args>) 
 " Creating command names to guage what is wanted/needed 
 " Creating the 'black box' based on that
 " APIs here are just template
