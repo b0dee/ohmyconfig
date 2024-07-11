@@ -411,30 +411,7 @@ tnoremap <silent><C-n> :Lexplore<CR>
 " ------------------------------ 
 " Bullet Journal WIP
 
-let g:bujo_path = '~/repos/bujo/'
-let g:bujo_journal_default_name = "primary"
-let g:bujo_index_winsize = 30
-let g:bujo_daily_log_winsize = 50
-" The below - in theory - should allow for auto rotation of files per month/week/day 
-" as function will just replace and open file based on what set here
-" so %Y-%m-%d (aka. 2024-07-10) or %Y-%m (aka. 2024-07) etc.
-let g:bujo_monthly_log_table_headers = []
-let g:bujo_future_log_filename = "future_%Y.md"
-let g:bujo_monthly_log_filename = "monthly_%Y.md"
-let g:bujo_daily_log_filename = "daily_%Y-%m.md"
-let g:bujo_backlog_filename = "backlog.md"
-let g:bujo_journal_index_header = "# {journal} Index"
-let g:bujo_daily_log_header =  "# %A %B %d" 
-let g:bujo_backlog_header =  "# {journal} Backlog" 
-let g:bujo_daily_log_task_header =  "**Tasks:**"
-let g:bujo_daily_log_event_header =  "**Events:**" 
-let g:bujo_daily_log_note_header =  "**Notes:**"
-" Options: month_long, month_short
-let g:bujo_future_log_header =  "# {month-long}" 
-" 0 = Don't include header
-" 1 = Include header
-" TODO - 2 = Smart inclusion only if events scheduled for this day
-let g:bujo_include_event_header = 0
+" Constants/ Enums
 let s:BUJO_NOTE = "note"
 let s:BUJO_TASK = "task"
 let s:BUJO_EVENT = "event"
@@ -442,33 +419,32 @@ let s:BUJO_DAILY = "daily"
 let s:BUJO_BACKLOG = "backlog"
 let s:BUJO_MONTHLY = "monthly"
 let s:BUJO_FUTURE = "future"
+
+let g:bujo_path = '~/repos/bujo/'
+let g:bujo_index_winsize = 30
+
+" Default settings
+let g:bujo_journal_default_name = "primary"
 let g:bujo_default_list_char = "*"
-let g:bujo_index_list_char = "{#}"
-let g:bujo_index_entries = [
-\ { 
-\  "name": "Future Log",
-\  "file": g:bujo_future_log_filename,
-\ },
-\ { 
-\   "name": "Monthly Log",
-\   "file": g:bujo_monthly_log_filename,
-\ },
-\ { 
-\   "name": "Daily Log",
-\   "file": g:bujo_daily_log_filename,
-\ },
-\ { 
-\   "name": "Backlog",
-\   "file": g:bujo_backlog_filename,
-\ }
-\]
-let g:bujo_entries_order = [
+
+" Daily Log vars
+" The below allows for auto rotation of files per month/week/day 
+" as function will just replace and open file based on what set here
+" so %Y-%m-%d (aka. 2024-07-10) or %Y-%m (aka. 2024-07) etc.
+let g:bujo_daily_log_filename = "daily_%Y-%m.md"
+let g:bujo_daily_log_winsize = 50
+let g:bujo_daily_log_header =  "# %A %B %d" 
+let g:bujo_daily_log_task_header =  "**Tasks:**"
+let g:bujo_daily_log_event_header =  "**Events:**" 
+let g:bujo_daily_log_note_header =  "**Notes:**"
+
+let g:bujo_daily_entry_order = [
 \ s:BUJO_EVENT,
 \ s:BUJO_TASK,
 \ s:BUJO_NOTE,
 \]
 
-let g:bujo_entries = {
+let g:bujo_daily_entries = {
 \ s:BUJO_EVENT: {
 \   "name": s:BUJO_EVENT,
 \   "header": g:bujo_daily_log_event_header,
@@ -494,10 +470,57 @@ let g:bujo_entries = {
 \   "backlog_enabled": v:false
 \ }
 \}
-let g:bujo_journal_init_include_future = v:true
-let g:bujo_journal_init_include_monthly = v:true
-let g:bujo_journal_init_include_daily  = v:true
-let g:bujo_journal_init_include_backlog  = v:true
+
+" Options: month_long, month_short
+" 0 = Don't include header
+" 1 = Include header
+" TODO - 2 = Smart inclusion only if events scheduled for this day
+let g:bujo_daily_include_event_header = 0
+
+" Future Log vars
+let g:bujo_future_log_filename = "future_%Y.md"
+let g:bujo_future_log_header =  "# {month-long}" 
+
+" Monthly Log vars
+let g:bujo_monthly_log_filename = "monthly_%Y.md"
+let g:bujo_monthly_log_table_headers = []
+
+" Backlog vars
+let g:bujo_backlog_filename = "backlog.md"
+let g:bujo_backlog_header =  "# {journal} Backlog" 
+
+
+" Index vars
+let g:bujo_index_header = "# {journal} Index"
+let g:bujo_index_list_char = "{#}"
+let g:bujo_index_enable_future = v:true
+let g:bujo_index_enable_monthly = v:true
+let g:bujo_index_enable_daily  = v:true
+let g:bujo_index_enable_backlog  = v:true
+let s:bujo_index_entries = [
+\ { 
+\  "name": "Future Log",
+\  "file": g:bujo_future_log_filename,
+\ },
+\ { 
+\   "name": "Monthly Log",
+\   "file": g:bujo_monthly_log_filename,
+\ },
+\ { 
+\   "name": "Daily Log",
+\   "file": g:bujo_daily_log_filename,
+\ },
+\ { 
+\   "name": "Backlog",
+\   "file": g:bujo_backlog_filename,
+\ }
+\]
+
+" Add in custom index entries from global list
+if exists("g:bujo_index_entries") 
+  call extend(s:bujo_index_entries, g:bujo_index_entries)
+endif
+
 let g:bujo_months = [
   \ { "short": "Jan", "long": "January", "days": 31 },
   \ { "short": "Feb", "long": "February", "days": 28 },
@@ -552,9 +575,9 @@ function! s:init_journal_index(journal)
   " We have already initialised index 
   if filereadable(l:journal_index) | return | endif
 
-  let l:content = [s:format_header(g:bujo_journal_index_header, l:journal_print_name), ""]
+  let l:content = [s:format_header(g:bujo_index_header, l:journal_print_name), ""]
   let l:counter = 0
-  for key in g:bujo_index_entries
+  for key in s:bujo_index_entries
     let l:counter += 1
     call add(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter . ".", "g") . " [" . key["name"] . "](" . key["file"] . ")")
   endfor
@@ -610,16 +633,16 @@ function! s:init_daily_log(journal)
 
   if s:mkdir_if_needed(a:journal) | return | endif
 
-  for key in g:bujo_entries_order
-    if g:bujo_entries[key]["daily_enabled"]
-      call add(l:content, g:bujo_entries[key]["header"])
-      if g:bujo_include_event_header == 2
+  for key in g:bujo_daily_entry_order
+    if g:bujo_daily_entries[key]["daily_enabled"]
+      call add(l:content, g:bujo_daily_entries[key]["header"])
+      if g:bujo_daily_include_event_header == 2
       " TODO - implement smart event inclusion in daily log
       " Will likely come after calendar integration, need a way of finding all live events
         echoerr "Smart event creation Not implemented!"
         return
       endif
-      call add(l:content, g:bujo_entries[key]["list_char"] . " ")
+      call add(l:content, g:bujo_daily_entries[key]["list_char"] . " ")
       call add(l:content, "")
     endif
   endfor
@@ -648,7 +671,7 @@ function! s:list_insert(list, type, entry, kind)
   let l:index = 0
   for line in a:list
     let l:index += 1
-    if line ==# g:bujo_entries[a:type]["header"] && g:bujo_entries[a:type][a:kind . "_enabled"]
+    if line ==# g:bujo_daily_entries[a:type]["header"] && g:bujo_daily_entries[a:type][a:kind . "_enabled"]
       call insert(a:list, a:entry, l:index)
       return a:list
     endif
@@ -658,7 +681,7 @@ function! s:list_insert(list, type, entry, kind)
   " The only 'safe' way I can conceive to add this in is 
   " to locate todays header and insert it 2 lines below 
   " (leaving blank line below header)
-  call insert(a:list, g:bujo_entries[a:type]["header"], 2)
+  call insert(a:list, g:bujo_daily_entries[a:type]["header"], 2)
   call insert(a:list, g:bujo_default_list_char . " " . l:entry, 3)
   call insert(a:list, "", 4)
   return a:list
@@ -668,9 +691,9 @@ function! s:list_append(list, type, entry)
   let l:index = 0
   for line in a:list
     let l:index += 1
-    if line ==# g:bujo_entries[a:type]["header"] && g:bujo_entries[a:type][a:kind . "_enabled"]
+    if line ==# g:bujo_daily_entries[a:type]["header"] && g:bujo_daily_entries[a:type][a:kind . "_enabled"]
       for item in a:list[l:index - 1:-1]
-        if item !=# g:bujo_index_entries[a:type]["list_char"]
+        if item !=# s:bujo_index_entries[a:type]["list_char"]
           call insert(a:list, a:entry, l:index - 1)
         endif
       endfor
@@ -682,7 +705,7 @@ function! s:list_append(list, type, entry)
   " The only 'safe' way I can conceive to add this in is 
   " to locate todays header and insert it 2 lines below 
   " (leaving blank line below header)
-  call insert(a:list, g:bujo_entries[a:type]["header"], 2)
+  call insert(a:list, g:bujo_daily_entries[a:type]["header"], 2)
   call insert(a:list, g:bujo_default_list_char . " " . l:entry, 3)
   call insert(a:list, "", 4)
   return a:list
@@ -695,7 +718,7 @@ function! s:create_entry(type, is_urgent, ...)
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
   call s:init_daily_log(g:bujo_journal_default_name)
   let l:content = readfile(l:daily_log)
-  call writefile(s:list_insert(l:content, a:type, g:bujo_entries[a:type]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
+  call writefile(s:list_insert(l:content, a:type, g:bujo_daily_entries[a:type]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
 endfunction
 
 " TODO - Implement new_entry logic
@@ -710,10 +733,10 @@ function! s:open_future_log(new_entry, ...)
     for month in g:bujo_months
       call add(l:content, substitute(substitute(g:bujo_future_log_header, "{month-long}", month["long"], "g"), "{month-short}", month["short"], "g"))
       call add(l:content, "")
-      for key in g:bujo_entries_order
-        if g:bujo_entries[key]["future_enabled"]
-          call add(l:content, g:bujo_entries[key]["header"])
-          call add(l:content, g:bujo_entries[key]["list_char"] . " ")
+      for key in g:bujo_daily_entry_order
+        if g:bujo_daily_entries[key]["future_enabled"]
+          call add(l:content, g:bujo_daily_entries[key]["header"])
+          call add(l:content, g:bujo_daily_entries[key]["list_char"] . " ")
           call add(l:content, "")
         endif
       endfor
@@ -729,7 +752,7 @@ function! s:open_future_log(new_entry, ...)
     echoerr "Future Log Quick Creation not implemented!"
     return
     let l:content = readfile(l:daily_log)
-    call writefile(s:list_insert(l:content, a:type, g:bujo_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
+    call writefile(s:list_insert(l:content, a:type, g:bujo_daily_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
   endif
 endfunction
 
@@ -783,10 +806,10 @@ function! s:open_backlog(open_backlog, ...)
     let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
     call add(l:content, s:format_header(g:bujo_backlog_header, l:journal_print_name))
     call add(l:content, "")
-    for key in g:bujo_entries_order
-      if g:bujo_entries[key]["backlog_enabled"]
-        call add(l:content, g:bujo_entries[key]["header"])
-        call add(l:content, g:bujo_entries[key]["list_char"] . " ")
+    for key in g:bujo_daily_entry_order
+      if g:bujo_daily_entries[key]["backlog_enabled"]
+        call add(l:content, g:bujo_daily_entries[key]["header"])
+        call add(l:content, g:bujo_daily_entries[key]["list_char"] . " ")
         call add(l:content, "")
       endif
     endfor
@@ -798,7 +821,7 @@ function! s:open_backlog(open_backlog, ...)
   if a:0 != 0
     let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:backlog)
-    call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
+    call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_daily_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
   endif
   if a:open_backlog
     execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
