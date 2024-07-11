@@ -426,6 +426,7 @@ let g:bujo_index_winsize = 30
 " Default settings
 let g:bujo_journal_default_name = "primary"
 let g:bujo_default_list_char = "*"
+let g:bujo_split_right = &splitright
 
 " Daily Log vars
 " The below allows for auto rotation of files per month/week/day 
@@ -601,7 +602,7 @@ function! s:open_index(open_journal, ...)
     if s:mkdir_if_needed(l:journal) | return | endif
   endif
 
-  let l:cmd = (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) . "new" 
+  let l:cmd = (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) . "new" 
   if a:open_journal
     execute l:cmd 
     setlocal filetype=markdown buftype=nofile noswapfile bufhidden=wipe
@@ -663,7 +664,7 @@ function! s:open_daily_log(...)
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
   let l:daily_log = expand(g:bujo_path . l:journal . "/". strftime(g:bujo_daily_filename))
   call s:init_daily_log(l:journal)
-  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
+  execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
   execute  "edit " . l:daily_log
   
 endfunction
@@ -822,10 +823,10 @@ function! s:open_backlog(open_backlog, ...)
   if a:0 != 0
     let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:backlog)
-    call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_daily_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
+    call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_header_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
   endif
   if a:open_backlog
-    execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
+    execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:backlog
   endif
 endfunction
@@ -844,11 +845,21 @@ function! s:open_monthly_log(create_entry_only, ...)
 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
   if !filereadable(l:monthly_log)
-    l:content = [ g:bujo_monthly_header ]
+    l:content = [ g:bujo_monthly_header, "" ]
+    if g:bujo_monthly_table_enabled 
+
+    endif
+    if g:bujo_monthly_table_enabled 
+      let l:table_headers = extend(["Day"], g:bujo_monthly_table_headers)
+      for day in g:bujo_months[str2nr(strftime("%m")) - 1]
+        echom day
+      endfor
+    endif
+    
   endif
 
   if !a:create_entry_only
-    execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
+    execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:backlog
   endif
 endfunction
