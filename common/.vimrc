@@ -439,7 +439,7 @@ let g:bujo_daily_task_header =  "**Tasks:**"
 let g:bujo_daily_event_header =  "**Events:**" 
 let g:bujo_daily_note_header =  "**Notes:**"
 
-let g:bujo_header_entry_order = [
+let g:bujo_header_entries_ordered = [
 \ s:BUJO_EVENT,
 \ s:BUJO_TASK,
 \ s:BUJO_NOTE,
@@ -452,6 +452,7 @@ let g:bujo_header_entries = {
 \   "list_char": "*",
 \   "daily_enabled": v:true,
 \   "future_enabled": v:true,
+\   "monthly_enabled": v:true,
 \   "backlog_enabled": v:false
 \ },
 \ s:BUJO_TASK : {
@@ -460,6 +461,7 @@ let g:bujo_header_entries = {
 \   "list_char": "*",
 \   "daily_enabled": v:true,
 \   "future_enabled": v:true,
+\   "monthly_enabled": v:true,
 \   "backlog_enabled": v:true
 \ },
 \ s:BUJO_NOTE: {
@@ -468,6 +470,7 @@ let g:bujo_header_entries = {
 \   "list_char": "",
 \   "daily_enabled": v:true,
 \   "future_enabled": v:true,
+\   "monthly_enabled": v:true,
 \   "backlog_enabled": v:false
 \ }
 \}
@@ -483,10 +486,29 @@ let g:bujo_future_filename = "future_%Y.md"
 let g:bujo_future_header =  "# {journal} Future Log - %Y" 
 
 " Monthly Log vars
-let g:bujo_monthly_filename = "monthly_%Y.md"
-let g:bujo_monthly_header = "# %A %Y"
+let g:bujo_monthly_filename = "monthly_%Y_%m.md"
+let g:bujo_monthly_header = "# %B %Y"
 let g:bujo_monthly_table_enabled = v:true
-let g:bujo_monthly_table_headers = []
+let g:bujo_monthly_table_align = v:true
+let g:bujo_monthly_table_headers_ordered = [
+\ "gratitude",
+\ "meditation",
+\ "reading"
+\ ]
+let g:bujo_monthly_table_headers = { 
+\ "gratitude": {
+\		"display":"Gratitude",
+\		"cron":""
+\ },
+\ "meditation": {
+\		"display":"Meditation",
+\		"cron":""
+\ },
+\ "reading": {
+\		"display":"Reading",
+\		"cron":""
+\ }
+\ }
 
 " Backlog vars
 let g:bujo_backlog_filename = "backlog.md"
@@ -636,7 +658,7 @@ function! s:init_daily_log(journal)
 
   if s:mkdir_if_needed(a:journal) | return | endif
 
-  for key in g:bujo_header_entry_order
+  for key in g:bujo_header_entries_ordered
     if g:bujo_header_entries[key]["daily_enabled"]
       call add(l:content, g:bujo_header_entries[key]["header"])
       if g:bujo_daily_include_event_header == 2
@@ -736,7 +758,7 @@ function! s:open_future_log(new_entry, ...)
     for month in g:bujo_months
       call add(l:content, s:format_header(g:bujo_future_header))
       call add(l:content, "")
-      for key in g:bujo_header_entry_order
+      for key in g:bujo_header_entries_ordered
         if g:bujo_header_entries[key]["future_enabled"]
           call add(l:content, g:bujo_header_entries[key]["header"])
           call add(l:content, g:bujo_header_entries[key]["list_char"] . " ")
@@ -809,7 +831,7 @@ function! s:open_backlog(open_backlog, ...)
     let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
     call add(l:content, s:format_header(g:bujo_backlog_header, l:journal_print_name))
     call add(l:content, "")
-    for key in g:bujo_header_entry_order
+    for key in g:bujo_header_entries_ordered
       if g:bujo_header_entries[key]["backlog_enabled"]
         call add(l:content, g:bujo_header_entries[key]["header"])
         call add(l:content, g:bujo_header_entries[key]["list_char"] . " ")
@@ -842,26 +864,56 @@ function! s:open_monthly_log(create_entry_only, ...)
   endif
 
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-  let l:monthly_log = l:journal_dir . strftime(g:bujo_monthly_filename)
+  let l:monthly_log = l:journal_dir . "/" . strftime(g:bujo_monthly_filename)
 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
   if !filereadable(l:monthly_log)
-    l:content = [ g:bujo_monthly_header, "" ]
+    let l:content = [ s:format_header(g:bujo_monthly_header), "" ]
+    for header in g:bujo_header_entries_ordered
+      if g:bujo_header_entries[header]["monthly_enabled"]
+        call add(l:content, s:format_header(g:bujo_header_entries[header]["header"]))
+        call add(l:content, g:bujo_header_entries[header]["list_char"] . " ")
+        call add(l:content, "")
+      endif
+    endfor
     if g:bujo_monthly_table_enabled 
-
-    endif
-    if g:bujo_monthly_table_enabled 
-      let l:table_headers = extend(["Day"], g:bujo_monthly_table_headers)
-      for day in g:bujo_months[str2nr(strftime("%m")) - 1]
-        echom day
+      let l:day_header = "Day"
+      let l:empty_checkbox = "[ ]"
+      let l:table_horizontal_border = "|" . repeat("-",len(l:day_header) + 1)
+      let l:row = "| " . l:day_header
+      for header in g:bujo_monthly_table_headers_ordered
+        let l:table_horizontal_border .= "-+" . repeat("-", len(s:format_header(g:bujo_monthly_table_headers[header]["display"])) + 1)
+        let l:row .= " | " . s:format_header(g:bujo_monthly_table_headers[header]["display"])
       endfor
+      let l:table_horizontal_border .= "-|"
+      let l:row .= " |"
+      call add(l:content, l:table_horizontal_border)
+      call add(l:content, l:row)
+      if g:bujo_monthly_table_align
+        let l:row = "| :" . repeat("-", len(l:day_header) - 1) . " |"
+        for header in g:bujo_monthly_table_headers_ordered
+          let l:row .= " :" . repeat("-", len(g:bujo_monthly_table_headers[header]["display"]) - 2) . ": |"
+        endfor
+        call add(l:content, l:row)
+      endif
+      for day in range(1, g:bujo_months[strftime("%m") - 1]["days"])
+        let l:row = "| " . day . "." . repeat(" ", len(l:day_header) - (day / 10 < 1 ? 2: 3)) . " |"
+        for header in g:bujo_monthly_table_headers_ordered
+          let l:padding = ((len(g:bujo_monthly_table_headers[header]["display"]) + 2) / 2) - (len(l:empty_checkbox) / 2)
+          let l:rounding_padding = (len(g:bujo_monthly_table_headers[header]["display"]) + 2) - ((l:padding * 2) + len(l:empty_checkbox))
+          let l:row .= repeat(" ", l:padding) . l:empty_checkbox . repeat(" ", l:padding + l:rounding_padding) . "|"
+        endfor
+        call add(l:content, l:row)
+      endfor
+      call add(l:content, l:table_horizontal_border)
+      call add(l:content, "")
     endif
-    
+    call writefile(l:content, l:monthly_log)
   endif
 
   if !a:create_entry_only
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
-    execute  "edit " . l:backlog
+    execute  "edit " . l:monthly_log
   endif
 endfunction
 
@@ -903,6 +955,8 @@ command! -nargs=* -bang Monthly call s:open_monthly_log(<bang>0, <f-args>)
 "     - bang: false
 "   - Events
 "     - bang: false
+" - Automatic git pull, commit and push 
+" - Cron scheduling of monthly headers (to auto populate table)
 " TODO - AutoPairs
 " - Fix inserting closing paren when we there already exists one
 " TODO - Markdown
