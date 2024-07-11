@@ -413,36 +413,75 @@ let g:bujo_path = '~/repos/bujo/'
 let g:bujo_journal_default_name = "default"
 let g:bujo_index_winsize = 30
 let g:bujo_daily_log_winsize = 50
-let g:bujo_index_template_include_future = v:true
-let g:bujo_index_template_include_monthly = v:true
-let g:bujo_index_template_include_daily = v:true
 " The below - in theory - should allow for auto rotation of files per month/week/day 
 " as function will just replace and open file based on what set here
 " so %Y-%m-%d (aka. 2024-07-10) or %Y-%m (aka. 2024-07) etc.
 let g:bujo_daily_log_filename = "daily_%Y-%m.md"
 let g:bujo_journal_index_header = "# {journal} Index"
 let g:bujo_daily_log_header =  "# %A %B %d" 
-let g:bujo_daily_log_task_header =  "## Tasks:" 
-let g:bujo_daily_log_event_header =  "## Events:" 
-let g:bujo_daily_log_note_header =  "## Notes:" 
-let g:bujo_daily_log_include_task_header = v:true
-let g:bujo_daily_log_include_note_header = v:true
+let g:bujo_daily_log_task_header =  "**Tasks:**"
+let g:bujo_daily_log_event_header =  "**Events:**" 
+let g:bujo_daily_log_note_header =  "**Notes:**"
+" Options: month_long, month_short
+let g:bujo_future_log_header =  "# {month-long}" 
 " 0 = Don't include header
 " 1 = Include header
 " TODO - 2 = Smart inclusion only if events scheduled for this day
-let g:bujo_daily_log_include_event_header = 0
+let g:bujo_include_event_header = 0
 let s:BUJO_NOTE = "note"
 let s:BUJO_TASK = "task"
 let s:BUJO_EVENT = "event"
-let s:bujo_entry_enum = { 
-      \ s:BUJO_EVENT : g:bujo_daily_log_event_header,
-      \ s:BUJO_TASK  : g:bujo_daily_log_task_header,
-      \ s:BUJO_NOTE  : g:bujo_daily_log_note_header
+let g:bujo_default_list_char = "*"
+let g:bujo_entries_order = [
+\ s:BUJO_EVENT,
+\ s:BUJO_TASK,
+\ s:BUJO_NOTE,
+\]
+
+let g:bujo_entries = {
+\ s:BUJO_EVENT: {
+\   "name": s:BUJO_EVENT,
+\   "header": g:bujo_daily_log_event_header,
+\   "list_char": "*",
+\   "daily_log_enabled": v:true,
+\   "future_log_enabled": v:true,
+\   "backlog_enabled": v:true
+\ },
+\ s:BUJO_TASK : {
+\   "name": s:BUJO_TASK,
+\   "header": g:bujo_daily_log_task_header,
+\   "list_char": "*",
+\   "daily_log_enabled": v:true,
+\   "future_log_enabled": v:true,
+\   "backlog_enabled": v:true
+\ },
+\ s:BUJO_NOTE: {
+\   "name": s:BUJO_NOTE,
+\   "header": g:bujo_daily_log_note_header,
+\   "list_char": "",
+\   "daily_log_enabled": v:true,
+\   "future_log_enabled": v:true,
+\   "backlog_enabled": v:true
 \ }
+\}
 let g:bujo_journal_init_include_future = v:true
 let g:bujo_journal_init_include_monthly = v:true
 let g:bujo_journal_init_include_daily  = v:true
 let g:bujo_journal_init_include_backlog  = v:true
+let g:bujo_months = [
+  \ { "short": "Jan", "long": "January", "days": 31 },
+  \ { "short": "Feb", "long": "February", "days": 28 },
+  \ { "short": "Mar", "long": "March", "days": 31 },
+  \ { "short": "Apr", "long": "April", "days": 30 },
+  \ { "short": "May", "long": "May", "days": 31 },
+  \ { "short": "Jun", "long": "June", "days": 30 },
+  \ { "short": "Jul", "long": "July", "days": 31 },
+  \ { "short": "Aug", "long": "August", "days": 31 },
+  \ { "short": "Sep", "long": "September", "days": 30 },
+  \ { "short": "Oct", "long": "October", "days": 31 },
+  \ { "short": "Nov", "long": "November", "days": 30 },
+  \ { "short": "Dec", "long": "December", "days": 31 },
+\ ]
 " TODO - Add customisable list elements
 " i.e. let g:bujo_migrated_to_future = '<' -- Migrated to future log
 "      > = Migrated to next week look
@@ -459,20 +498,12 @@ let g:bujo_journal_init_include_backlog  = v:true
 " spaces between
 function! s:open_index(open_journal, ...)
   let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
+  let l:journal_print_name = substitute(l:journal, "\\<\\([a-z]\\)", "\\U\\1", "g")
   let l:journal_dir = expand(g:bujo_path . l:journal)
   let l:journal_index = expand(l:journal_dir . "/index.md")
   
   " Check to see if the journal exists
-  if !isdirectory(l:journal_dir) && !a:open_journal
-    let l:choice = confirm("Journal `" .. l:journal .. "` does not exist, would you like to create it?",
-                      \ "&Yes\n&No\n&Cancel")
-    " No (2), Cancel (3) or Interrupt (0) or an invalid choice
-    if l:choice != 1 
-      echo "Aborting journal creation." 
-      return 
-    endif
-    call mkdir(l:journal_dir, "p", "0o775")
-  endif
+  if !isdirectory(l:journal_dir) && !a:open_journal | call mkdir(l:journal_dir, "p", "0o775") | endif
 
   let l:cmd = (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_index_winsize > 0)? (g:bujo_index_winsize*winwidth(0))/100 : -g:bujo_index_winsize) . "new" 
   if a:open_journal
@@ -487,14 +518,24 @@ function! s:open_index(open_journal, ...)
   else
     let l:index_path = expand(g:bujo_path . l:journal . "/index.md")  
     if !filereadable(l:index_path)
-      let l:content = [substitute(substitute(g:bujo_journal_index_header, "{journal}", l:journal, "g"), "\\<\\([a-z]\\)", "\\U\\1", "g"), ""]
-      " TODO - The numbering here could be wrong if people toggle things off 
-      " Introduce counter and increment when adding a line
-      if g:bujo_journal_init_include_future == v:true | call add(l:content, strftime("[1. Future Log](future_%Y)")) | endif
-      if g:bujo_journal_init_include_monthly == v:true | call add(l:content, strftime("[2. Monthly Log](monthly_%Y-%M)")) | endif
-      if g:bujo_journal_init_include_daily == v:true | call add(l:content, strftime("[3. Daily Log](daily_%Y-%M)")) | endif
-      if g:bujo_journal_init_include_backlog == v:true | call add(l:content, strftime("[4. Backlog](backlog)")) | endif
-      call append(0, l:content)
+      let l:content = [substitute(g:bujo_journal_index_header, "{journal}", l:journal_print_name, "g"), ""]
+      let l:counter = 1
+      if g:bujo_journal_init_include_future
+				call add(l:content, strftime("[" . l:counter . ". Future Log](future_%Y)"))      
+        let l:counter += 1
+      endif
+      if g:bujo_journal_init_include_monthly
+				call add(l:content, strftime("[" . l:counter . ". Monthly Log](monthly_%Y-%M)")) 
+        let l:counter += 1
+      endif
+      if g:bujo_journal_init_include_daily
+				call add(l:content, strftime("[" . l:counter . ". Daily Log](daily_%Y-%M)"))     
+        let l:counter += 1
+      endif
+      if g:bujo_journal_init_include_backlog
+				call add(l:content, strftime("[" . l:counter . ". Backlog](backlog)"))           
+        let l:counter += 1
+      endif
       call writefile(l:content, l:index_path)
     endif
     execute l:cmd 
@@ -504,42 +545,39 @@ endfunction
 
 function! s:init_daily_log(journal, type = v:null, ...)
   if a:type != v:null && a:0 == 0 
-    let l:match_string = s:bujo_entry_enum[a:type]
     echoerr "Provided type (" . a:type . ") but did not provide any data to enter"
     return
   endif
-  let l:entry = a:000
-  let l:daily_log = expand(g:bujo_path . a:journal . "/". strftime(g:bujo_daily_log_filename))
+  let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
+  let l:journal_dir = expand(g:bujo_path . a:journal) 
+  let l:daily_log = expand(l:journal_dir . "/". strftime(g:bujo_daily_log_filename))
   let l:content = [strftime(g:bujo_daily_log_header), ""]
 
-  if g:bujo_daily_log_include_event_header != 0
-    if g:bujo_daily_log_include_event_header == 1
-      call add(l:content, g:bujo_daily_log_event_header)
-      if a:type == s:BUJO_EVENT
-        call add(l:content, "* " . l:entry)
+  " Check to see if the journal exists
+  if !isdirectory(l:journal_dir) | call mkdir(l:journal_dir, "p", "0o775") | endif
+
+  for key in g:bujo_entries_order
+    if g:bujo_entries[key]["daily_log_enabled"]
+      call add(l:content, g:bujo_entries[key]["header"])
+      if a:type == key
+        echom l:entry
+        call add(l:content, g:bujo_entries[key]["list_char"] . " " . l:entry)
       endif
-      call add(l:content, "* ")
-      call add(l:content, "")
-    elseif g:bujo_daily_log_include_event_header == 2
+      if g:bujo_include_event_header == 2
       " TODO - implement smart event inclusion in daily log
       " Will likely come after calendar integration, need a way of finding all live events
-      echoerr "Not implemented!"
+        echoerr "Not implemented!"
+        return
+      endif
+      call add(l:content, g:bujo_entries[key]["list_char"] . " ")
+      call add(l:content, "")
     endif
-  endif
-  if g:bujo_daily_log_include_task_header
-    call add(l:content, g:bujo_daily_log_task_header)
-    if a:type == s:BUJO_TASK
-      call add(l:content, "* " . l:entry)
-    endif
-    call add(l:content, "* ")
-    call add(l:content, "")
-  endif
-  if g:bujo_daily_log_include_note_header
-    call add(l:content, g:bujo_daily_log_note_header)
-    if a:type == s:BUJO_NOTE
-      call add(l:content, l:entry)
-    endif
-    call add(l:content, "")
+  endfor
+
+  " Are we initialising for today?
+  if filereadable(l:daily_log) && (readfile(l:daily_log, "", 1)[0] !=# strftime(g:bujo_daily_log_header))
+    " Add any pre-existing content to the file
+    call extend(l:content, readfile(l:daily_log))
   endif
 
   " Write output to file
@@ -549,7 +587,7 @@ endfunction
 function! s:open_daily_log(...)
   let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
   let l:daily_log = expand(g:bujo_path . l:journal . "/". strftime(g:bujo_daily_log_filename))
-  if !filereadable(l:daily_log)
+  if !filereadable(l:daily_log) || readfile(l:daily_log, "", 1)[0] !=# strftime(g:bujo_daily_log_header) 
     call s:init_daily_log(l:journal)
   endif
   execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
@@ -561,17 +599,16 @@ endfunction
 function! s:create_entry(type, is_urgent, ...)
   let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
   let l:daily_log = expand(g:bujo_path . g:bujo_journal_default_name . "/". strftime(g:bujo_daily_log_filename))
-  if !filereadable(l:daily_log)
-    " We're creating a new file, insert template
-    call s:init_daily_log(g:bujo_journal_default_name)
+  if !filereadable(l:daily_log) || readfile(l:daily_log, "", 1)[0] !=# strftime(g:bujo_daily_log_header) 
+    " We're creating a new file/ initialising today
+    call s:init_daily_log(g:bujo_journal_default_name, a:type, l:entry)
   else
     let l:index = 0
     let l:content = readfile(l:daily_log)
-    let l:match_string = s:bujo_entry_enum[a:type]
     for line in l:content
       let l:index = l:index+1
-      if line == l:match_string
-        call insert(l:content, "* " . l:entry, l:index)
+      if line ==# g:bujo_entries[a:type]["header"] && g:bujo_entries[a:type]["daily_log_enabled"]
+        call insert(l:content, g:bujo_entries[a:type]["list_char"] . " " . l:entry, l:index)
         call writefile(l:content, l:daily_log)
         return
       endif
@@ -581,10 +618,26 @@ function! s:create_entry(type, is_urgent, ...)
     " The only 'safe' way I can conceive to add this in is 
     " to locate todays header and insert it 2 lines below 
     " (leaving blank line below header)
-    call insert(l:content, s:bujo_entry_enum[a:type], 2)
-    call insert(l:content, "* " . l:entry, 3)
+    call insert(l:content, g:bujo_entries[type]["header"], 2)
+    call insert(l:content, g:bujo_default_list_char . " " . l:entry, 3)
     call insert(l:content, "", 4)
     call writefile(l:content, l:daily_log)
+  endif
+endfunction
+
+function! s:open_future_log(new_entry, ...)
+  if !new_entry
+    let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name 
+    if !isdirectory(l:journal_dir) | call mkdir(l:journal_dir, "p", "0o775") | endif
+    if !filereadable(l:journal_dir . "/future_log.md"))
+      let l:content = []
+      for month in g:bujo_months
+        call add(l:content, substitute(substitute(g:bujo_future_log_header, "{month-long}", month["long"], "g"), "{month-short}", "g"))
+        call extend(l:content, ["",""])
+      endfor
+    endif
+    execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
+    execute  "edit " . l:journal_dir . "/future_log.md"
   endif
 endfunction
 
