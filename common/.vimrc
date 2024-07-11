@@ -696,10 +696,11 @@ function! s:open_daily(...)
   
 endfunction
 
-function! s:list_insert(list, type, entry, kind)
+function! s:list_insert(list, type, entry, kind, stop_pattern = v:null)
   let l:index = 0
   for line in a:list
     let l:index += 1
+    if line ==# a:stop_pattern | break | endif
     if line ==# g:bujo_header_entries[a:type]["header"] && g:bujo_header_entries[a:type][a:kind . "_enabled"]
       call insert(a:list, a:entry, l:index)
       return a:list
@@ -788,20 +789,20 @@ function! s:open_future(new_entry, ...)
   endif
 endfunction
 
-function! s:create_container(...)
+function! s:create_collection(...)
   if a:0 == 0 
-    echoerr "create_container() requires at least 1 argment. Aborting."
+    echoerr "create_collection() requires at least 1 argment. Aborting."
     return
   endif
 
-  let l:container = join(a:000, " ")
-  let l:container_print_name = substitute(l:container, "\\<\\([a-z]\\)", "\\U\\1", "g")
+  let l:collection = join(a:000, " ")
+  let l:collection_print_name = substitute(l:collection, "\\<\\([a-z]\\)", "\\U\\1", "g")
 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
 
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
   let l:journal_index = expand(l:journal_dir . "/index.md")
-  let l:container_path = expand(l:journal_dir . "/" . l:container . ".md")
+  let l:collection_path = expand(l:journal_dir . "/" . l:collection . ".md")
 
   call s:init_journal_index(g:bujo_journal_default_name)
 
@@ -813,19 +814,19 @@ function! s:create_container(...)
     let l:counter += 1
     " Account for the case where we are at EOF and no empty newline
     if line !~# substitute(g:bujo_index_list_char, "{#}", l:counter . ". ", "g") 
-      call insert(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter, "g") . ". [" . l:container_print_name . "](" . l:container_path . ")", l:counter + 1)
+      call insert(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter, "g") . ". [" . l:collection_print_name . "](" . l:collection_path . ")", l:counter + 1)
       break
     elseif line ==# l:content[-1] && len(l:content) == l:counter + 2
-      call add(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter + 1, "g") . ". [" . l:container_print_name . "](" . l:container_path . ")")
+      call add(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter + 1, "g") . ". [" . l:collection_print_name . "](" . l:collection_path . ")")
     endif
   endfor
   call writefile(l:content, l:journal_index)
 
-  let l:content = [ "# " . l:container_print_name, "", "" ]
-  call writefile(l:content, l:container_path)
+  let l:content = [ "# " . l:collection_print_name, "", "" ]
+  call writefile(l:content, l:collection_path)
 
   execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
-  execute  "edit " . l:container_path
+  execute  "edit " . l:collection_path
 
 endfunction
 
@@ -918,6 +919,12 @@ function! s:open_monthly(create_entry_only, ...)
     call writefile(l:content, l:monthly_log)
   endif
 
+  if a:0 > 0 
+    let l:entry = join(a:000, " ")
+    let l:content = readfile(l:monthly_log)
+    call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_header_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
+  endif
+
   if !a:create_entry_only
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:monthly_log
@@ -936,7 +943,7 @@ command! -nargs=+ -bang Note call s:create_entry(s:BUJO_NOTE, <bang>0, <f-args>)
 " Notes: Providing '!' causes it to open backlog, otherwise just add entry to list
 command! -nargs=* -bang Backlog call s:open_backlog(<bang>0, <f-args>)
 command! -nargs=* -bang Future call s:open_future(<bang>0, <f-args>) 
-command! -nargs=+ Container call s:create_container(<f-args>)
+command! -nargs=+ Collection call s:create_collection(<f-args>)
 command! -nargs=* -bang Monthly call s:open_monthly(<bang>0, <f-args>)
 " Creating command names to guage what is wanted/needed 
 " Creating the 'black box' based on that
@@ -952,11 +959,13 @@ command! -nargs=* -bang Monthly call s:open_monthly(<bang>0, <f-args>)
 " - migration functionality
 " - motions to navigate/ prepopulate command
 " - set filetype, link syntax with markdown, and introduce motions within files i.e. '<leader><<' in daily log can prompt
-"   user to specify month and will migrate entry to future log etc.
+"   user to specify month and will migrate entry to future log etc., >> will move to next monthly log
 " - Implement Commands: 
+"   - Weekly
+"     - Launches to a week in review session
 "   - RenameJournal
 "     - bang: false
-"   - RenameContainer
+"   - RenameCollection
 "     - bang: false
 "   - Tasks
 "     - bang: false
@@ -980,5 +989,5 @@ command! -nargs=* -bang Monthly call s:open_monthly(<bang>0, <f-args>)
 " - Since we want to have ability to migrate by week for example, would need to introduce way to have future days in 
 "   daily log while still putting entries into correct day, so would need to iterate through lines until we found todays
 "   entry, then foud the appropriate type to enter it under
-" - Switch to have entries append to list rather than insert at the top. This work will be needed for containers anyhow
+" - Switch to have entries append to list rather than insert at the top. This work will be needed for collections anyhow
 "   (as they are being put into index rather than a log). 
