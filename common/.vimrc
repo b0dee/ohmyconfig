@@ -431,12 +431,12 @@ let g:bujo_default_list_char = "*"
 " The below allows for auto rotation of files per month/week/day 
 " as function will just replace and open file based on what set here
 " so %Y-%m-%d (aka. 2024-07-10) or %Y-%m (aka. 2024-07) etc.
-let g:bujo_daily_log_filename = "daily_%Y-%m.md"
-let g:bujo_daily_log_winsize = 50
-let g:bujo_daily_log_header =  "# %A %B %d" 
-let g:bujo_daily_log_task_header =  "**Tasks:**"
-let g:bujo_daily_log_event_header =  "**Events:**" 
-let g:bujo_daily_log_note_header =  "**Notes:**"
+let g:bujo_daily_filename = "daily_%Y-%m.md"
+let g:bujo_daily_winsize = 50
+let g:bujo_daily_header =  "# %A %B %d" 
+let g:bujo_daily_task_header =  "**Tasks:**"
+let g:bujo_daily_event_header =  "**Events:**" 
+let g:bujo_daily_note_header =  "**Notes:**"
 
 let g:bujo_daily_entry_order = [
 \ s:BUJO_EVENT,
@@ -447,7 +447,7 @@ let g:bujo_daily_entry_order = [
 let g:bujo_daily_entries = {
 \ s:BUJO_EVENT: {
 \   "name": s:BUJO_EVENT,
-\   "header": g:bujo_daily_log_event_header,
+\   "header": g:bujo_daily_event_header,
 \   "list_char": "*",
 \   "daily_enabled": v:true,
 \   "future_enabled": v:true,
@@ -455,7 +455,7 @@ let g:bujo_daily_entries = {
 \ },
 \ s:BUJO_TASK : {
 \   "name": s:BUJO_TASK,
-\   "header": g:bujo_daily_log_task_header,
+\   "header": g:bujo_daily_task_header,
 \   "list_char": "*",
 \   "daily_enabled": v:true,
 \   "future_enabled": v:true,
@@ -463,7 +463,7 @@ let g:bujo_daily_entries = {
 \ },
 \ s:BUJO_NOTE: {
 \   "name": s:BUJO_NOTE,
-\   "header": g:bujo_daily_log_note_header,
+\   "header": g:bujo_daily_note_header,
 \   "list_char": "",
 \   "daily_enabled": v:true,
 \   "future_enabled": v:true,
@@ -478,12 +478,13 @@ let g:bujo_daily_entries = {
 let g:bujo_daily_include_event_header = 0
 
 " Future Log vars
-let g:bujo_future_log_filename = "future_%Y.md"
-let g:bujo_future_log_header =  "# {month-long}" 
+let g:bujo_future_filename = "future_%Y.md"
+let g:bujo_future_header =  "# {journal} Future Log - %Y" 
 
 " Monthly Log vars
-let g:bujo_monthly_log_filename = "monthly_%Y.md"
-let g:bujo_monthly_log_table_headers = []
+let g:bujo_monthly_filename = "monthly_%Y.md"
+let g:bujo_monthly_header = "# %A %Y"
+let g:bujo_monthly_table_headers = []
 
 " Backlog vars
 let g:bujo_backlog_filename = "backlog.md"
@@ -500,15 +501,15 @@ let g:bujo_index_enable_backlog  = v:true
 let s:bujo_index_entries = [
 \ { 
 \  "name": "Future Log",
-\  "file": g:bujo_future_log_filename,
+\  "file": g:bujo_future_filename,
 \ },
 \ { 
 \   "name": "Monthly Log",
-\   "file": g:bujo_monthly_log_filename,
+\   "file": g:bujo_monthly_filename,
 \ },
 \ { 
 \   "name": "Daily Log",
-\   "file": g:bujo_daily_log_filename,
+\   "file": g:bujo_daily_filename,
 \ },
 \ { 
 \   "name": "Backlog",
@@ -621,15 +622,15 @@ endfunction
 function! s:init_daily_log(journal)
   " Check if we've already initialised today's log
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
-  let l:daily_log = expand(g:bujo_path . a:journal . "/". strftime(g:bujo_daily_log_filename))
-  if filereadable(l:daily_log) && readfile(l:daily_log, "", 1)[0] ==# s:format_header(g:bujo_daily_log_header, l:journal_print_name) 
+  let l:daily_log = expand(g:bujo_path . a:journal . "/". strftime(g:bujo_daily_filename))
+  if filereadable(l:daily_log) && readfile(l:daily_log, "", 1)[0] ==# s:format_header(g:bujo_daily_header, l:journal_print_name) 
     return
   endif
 
   let l:journal_print_name = substitute(a:journal, "\\<\\([a-z]\\)", "\\U\\1", "g")
   let l:journal_dir = expand(g:bujo_path . a:journal) 
-  let l:daily_log = expand(l:journal_dir . "/". strftime(g:bujo_daily_log_filename))
-  let l:content = [s:format_header(g:bujo_daily_log_header, l:journal_print_name), ""]
+  let l:daily_log = expand(l:journal_dir . "/". strftime(g:bujo_daily_filename))
+  let l:content = [s:format_header(g:bujo_daily_header, l:journal_print_name), ""]
 
   if s:mkdir_if_needed(a:journal) | return | endif
 
@@ -648,7 +649,7 @@ function! s:init_daily_log(journal)
   endfor
 
   " Does the containing file have other daily log entries?
-  if filereadable(l:daily_log) && (readfile(l:daily_log, "", 1)[0] !=# s:format_header(g:bujo_daily_log_header, l:journal_print_name))
+  if filereadable(l:daily_log) && (readfile(l:daily_log, "", 1)[0] !=# s:format_header(g:bujo_daily_header, l:journal_print_name))
     " Add any pre-existing content to the file
     call extend(l:content, readfile(l:daily_log))
   endif
@@ -660,9 +661,9 @@ endfunction
 function! s:open_daily_log(...)
   let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
-  let l:daily_log = expand(g:bujo_path . l:journal . "/". strftime(g:bujo_daily_log_filename))
+  let l:daily_log = expand(g:bujo_path . l:journal . "/". strftime(g:bujo_daily_filename))
   call s:init_daily_log(l:journal)
-  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
+  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
   execute  "edit " . l:daily_log
   
 endfunction
@@ -714,7 +715,7 @@ endfunction
 " TODO: Handle displaying urgent tasks
 function! s:create_entry(type, is_urgent, ...)
   let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
-  let l:daily_log = expand(g:bujo_path . g:bujo_journal_default_name . "/". strftime(g:bujo_daily_log_filename))
+  let l:daily_log = expand(g:bujo_path . g:bujo_journal_default_name . "/". strftime(g:bujo_daily_filename))
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
   call s:init_daily_log(g:bujo_journal_default_name)
   let l:content = readfile(l:daily_log)
@@ -725,13 +726,13 @@ endfunction
 " This needs to handle for month selected (required)
 function! s:open_future_log(new_entry, ...)
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-  let l:future_log = l:journal_dir . g:bujo_future_log_filename 
+  let l:future_log = l:journal_dir . g:bujo_future_filename 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
 
   if !filereadable(l:future_log)
     let l:content = []
     for month in g:bujo_months
-      call add(l:content, substitute(substitute(g:bujo_future_log_header, "{month-long}", month["long"], "g"), "{month-short}", month["short"], "g"))
+      call add(l:content, s:format_header(g:bujo_future_header))
       call add(l:content, "")
       for key in g:bujo_daily_entry_order
         if g:bujo_daily_entries[key]["future_enabled"]
@@ -746,7 +747,7 @@ function! s:open_future_log(new_entry, ...)
   endif
 
   if !a:new_entry
-    execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
+    execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:future_log
   else
     echoerr "Future Log Quick Creation not implemented!"
@@ -792,7 +793,7 @@ function! s:create_container(...)
   let l:content = [ "# " . l:container_print_name, "", "" ]
   call writefile(l:content, l:container_path)
 
-  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
+  execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
   execute  "edit " . l:container_path
 
 endfunction
@@ -824,11 +825,33 @@ function! s:open_backlog(open_backlog, ...)
     call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_daily_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
   endif
   if a:open_backlog
-    execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_log_winsize > 0)? (g:bujo_daily_log_winsize*winwidth(0))/100 : -g:bujo_daily_log_winsize) "new" 
+    execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:backlog
   endif
 endfunction
 
+function! s:open_monthly_log(create_entry_only, ...)
+  if a:0 > 0 && a:0 < 2
+    echoerr "Monthly command requires at least 2 arguments if providing any."
+    return
+  elseif a:0 > 0
+    let l:type = a:1 
+    let l:entry = join(a:000[1:-1], " ")
+  endif
+
+  let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
+  let l:monthly_log = l:journal_dir . strftime(g:bujo_monthly_filename)
+
+  if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
+  if !filereadable(l:monthly_log)
+    l:content = [ g:bujo_monthly_header ]
+  endif
+
+  if !a:create_entry_only
+    execute (&splitright ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
+    execute  "edit " . l:backlog
+  endif
+endfunction
 
 " ------------------------------ 
 "  interface [plugin]
@@ -843,34 +866,12 @@ command! -nargs=+ -bang Note call s:create_entry(s:BUJO_NOTE, <bang>0, <f-args>)
 command! -nargs=* -bang Backlog call s:open_backlog(<bang>0, <f-args>)
 command! -nargs=* -bang Future call s:open_future_log(<bang>0, <f-args>) 
 command! -nargs=+ Container call s:create_container(<f-args>)
+command! -nargs=* -bang Monthly call s:open_monthly_log(<bang>0, <f-args>)
 " Creating command names to guage what is wanted/needed 
 " Creating the 'black box' based on that
 " APIs here are just template
-" command! -nargs=* -bang Monthly call s:open_monthly_log(<bang>0, <f-args>)
 " command! -nargs=* -bang TaskList call s:list_tasks(<bang>0, <f-args>)
 " command! -nargs=* -bang EventList call s:list_events(<bang>0, <f-args>)
-" command! -nargs=* -bang  call s:open_monthly_log(<bang>0, <f-args>)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 " ~~~~~~~~~~~~~~
 " Notes
