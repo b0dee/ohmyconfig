@@ -364,6 +364,8 @@ tnoremap <silent><C-.> :tabmove+<CR>
 noremap! <C-BS> <C-W>
 
 nmap <C-w>z <Plug>(zoom-toggle)
+nmap <silent>gG :G<CR>
+nmap <silent><leader>g :G<CR>
 
 " short hands for Git Gutter magic
 cnoreabbrev ShowChanges GitGutterLineHighlightsEnable
