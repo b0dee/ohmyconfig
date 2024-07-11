@@ -410,13 +410,17 @@ tnoremap <silent><C-n> :Lexplore<CR>
 " Bullet Journal WIP
 
 let g:bujo_path = '~/repos/bujo/'
-let g:bujo_journal_default_name = "default"
+let g:bujo_journal_default_name = "primary"
 let g:bujo_index_winsize = 30
 let g:bujo_daily_log_winsize = 50
 " The below - in theory - should allow for auto rotation of files per month/week/day 
 " as function will just replace and open file based on what set here
 " so %Y-%m-%d (aka. 2024-07-10) or %Y-%m (aka. 2024-07) etc.
+let g:bujo_monthly_log_table_headers = []
+let g:bujo_future_log_filename = "future_%Y.md"
+let g:bujo_monthly_log_filename = "monthly_%Y.md"
 let g:bujo_daily_log_filename = "daily_%Y-%m.md"
+let g:bujo_backlog_filename = "backlog.md"
 let g:bujo_journal_index_header = "# {journal} Index"
 let g:bujo_daily_log_header =  "# %A %B %d" 
 let g:bujo_backlog_header =  "# {journal} Backlog" 
@@ -441,19 +445,19 @@ let g:bujo_index_list_char = "{#}"
 let g:bujo_index_entries = [
 \ { 
 \  "name": "Future Log",
-\  "file": "future_%Y",
+\  "file": g:bujo_future_log_filename,
 \ },
 \ { 
 \   "name": "Monthly Log",
-\   "file": "monthly_%Y",
+\   "file": g:bujo_monthly_log_filename,
 \ },
 \ { 
 \   "name": "Daily Log",
-\   "file": "daily_%Y-%m",
+\   "file": g:bujo_daily_log_filename,
 \ },
 \ { 
 \   "name": "Backlog",
-\   "file": "backlog",
+\   "file": g:bujo_backlog_filename,
 \ }
 \]
 let g:bujo_entries_order = [
@@ -696,7 +700,7 @@ endfunction
 " This needs to handle for month selected (required)
 function! s:open_future_log(new_entry, ...)
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-  let l:future_log = l:journal_dir . "/future_log.md" 
+  let l:future_log = l:journal_dir . g:bujo_future_log_filename 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
 
   if !filereadable(l:future_log)
@@ -770,7 +774,7 @@ endfunction
 
 function! s:open_backlog(open_backlog, ...)
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-  let l:backlog = l:journal_dir . "/backlog.md" 
+  let l:backlog = l:journal_dir . "/" . strftime(g:bujo_backlog_filename)
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
   if !filereadable(l:backlog)
     let l:content = []
