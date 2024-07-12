@@ -811,7 +811,7 @@ function! s:create_collection(...)
   call writefile(l:content, l:collection_path)
 
   execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
-  execute  "edit " . l:collection_path
+  execute  "edit " . fnameescape(l:collection_path)
 
 endfunction
 
