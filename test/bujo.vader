@@ -4,7 +4,7 @@
 Execute: 
   Log "Starting vim-bujo test suite"
   :Index
-  :Task1st test task
+  :Task 1st test task
   :Task 2nd test task
   :Task 3rd test task
   :Task 4th test task
