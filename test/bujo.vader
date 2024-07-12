@@ -20,7 +20,14 @@ Execute:
   :Collection 2nd test collection
   :Collection 3rd test collection
   :Collection 4th test collection
+  :Backlog 1st test collection
+  :Backlog 2nd test collection
+  :Backlog 3rd test collection
+  :Backlog 4th test collection
   :Today
+  :Backlog
+  :Monthly
+  :Future
 
 
 # Execute (Initialising Journal context):
