@@ -590,7 +590,7 @@ endfunction
 " mkdir_if_needed
 " Returns true if user cancelled, false if already exists/created directory
 function! s:mkdir_if_needed(journal = v:null)
-  let l:journal_dir = expand(g:bujo_path). a:journal
+  let l:journal_dir = tolower(expand(g:bujo_path). a:journal)
   if isdirectory(l:journal_dir)
     return v:false
 	endif
