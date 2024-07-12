@@ -1,4 +1,4 @@
-source ../common/.vimrc
+source /home/joe/repos/ohmyconfig/common/.vimrc
 filetype off
 let &runtimepath .= ','.expand('<sfile>:p:h:h')
 filetype plugin indent on
