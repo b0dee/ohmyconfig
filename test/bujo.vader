@@ -30,44 +30,4 @@ Execute:
   :Future
 
 
-# Execute (Initialising Journal context):
-#   " Bring in vim-bujo
-#   " change this when moving into its own repo
-#   source $MYVIMRC
-#   function! AppendRandomString(arg)
-#     return join([a:arg, nr2char((rand() % 94) + 32),nr2char((rand() % 94) + 32),nr2char((rand() % 94) + 32),nr2char((rand() % 94) + 32),nr2char((rand() % 94) + 32)], "")
-#   endfunction
-#   function! FormatHeader(header, journal=g:bujo_journal_default_name)
-#     return strftime(substitute(a:header, "{journal}", substitute(a:journal, "\\<\\([a-z]\\)", "\\U\\1", "g"), "g"))
-#   endfunction
-# 
-#   let g:bujo_journal_default_name = AppendRandomString("Journal")
-#   Log "Using `" . g:bujo_journal_default_name . "` as the default journal name for this test run"
-# 
-# Do:
-#   * Initialise index file
-#   :Index
-# 
-# Then: 
-#   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-#   let l:journal_index = expand(l:journal_dir . "/index.md")
-#   let l:expected = [ FormatHeader(g:bujo_index_header, g:bujo_journal_default_name), ""]
-#   let l:counter = 0
-#   if g:bujo_index_enable_future 
-#     let l:counter += 1
-#     call add(l:expected, substitute(g:bujo_index_list_char, "{#}", l:counter . ".", "g") . " [" . key["name"] . "](" . key["file"] . ")")
-# 	endif
-#   if g:bujo_index_enable_monthly 
-#     let l:counter += 1
-# 	endif
-#   if g:bujo_index_enable_daily  
-#     let l:counter += 1
-# 	endif
-#   if g:bujo_index_enable_backlog  
-#     let l:counter += 1
-# 	endif
-#   let l:content = readfile(g:bujo_path)
-#   AssertEqual l:content 
-#   
-# Do: 
-#   :non-existent-command\<Enter>
+# TODO - Create tests with expectation logic so tests can pass/fail based on input
