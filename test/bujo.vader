@@ -20,10 +20,10 @@ Execute:
   :Collection 2nd test collection
   :Collection 3rd test collection
   :Collection 4th test collection
-  :Backlog 1st test collection
-  :Backlog 2nd test collection
-  :Backlog 3rd test collection
-  :Backlog 4th test collection
+  :Backlog 1st test backlog
+  :Backlog 2nd test backlog
+  :Backlog 3rd test backlog
+  :Backlog 4th test backlog
   :Today
   :Backlog
   :Monthly
