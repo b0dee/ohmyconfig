@@ -579,10 +579,18 @@ let g:bujo_months = [
 "  autoload
 " ------------------------------ 
 
+function! s:format_filename(filename) 
+  return tolower(substitute(strftime(a:filename), " ", "_", "g"))
+endfunction
+
+function! s:format_header(header, journal = g:bujo_journal_default_name) 
+  return strftime(substitute(a:header, "{journal}", substitute(a:journal, "\\<\\([a-z]\\)", "\\U\\1", "g"), "g"))
+endfunction
+
 " mkdir_if_needed
 " Returns true if user cancelled, false if already exists/created directory
 function! s:mkdir_if_needed(journal = v:null)
-  let l:journal_dir = expand(g:bujo_path . a:journal)
+  let l:journal_dir = expand(g:bujo_path). a:journal
   if isdirectory(l:journal_dir)
     return v:false
 	endif
@@ -599,13 +607,9 @@ function! s:mkdir_if_needed(journal = v:null)
   return v:false
 endfunction
 
-function! s:format_header(header, journal = g:bujo_journal_default_name) 
-  return strftime(substitute(a:header, "{journal}", substitute(a:journal, "\\<\\([a-z]\\)", "\\U\\1", "g"), "g"))
-endfunction
-
 function! s:init_journal_index(journal)
   let l:journal_dir = expand(g:bujo_path . a:journal)
-  let l:journal_index = expand(l:journal_dir . "/index.md")
+  let l:journal_index = l:journal_dir . "/index.md"
   " We have already initialised index 
   if filereadable(l:journal_index) | return | endif
 
@@ -647,20 +651,19 @@ function! OpenIndex(open_journal, ...)
     let l:journal_index = expand(g:bujo_path . l:journal . "/index.md")  
     call s:init_journal_index(l:journal)
     execute l:cmd 
-    execute "edit " . l:journal_index
+    execute "edit " . fnameescape(l:journal_index)
   endif
 endfunction
 
 function! s:init_daily(journal)
   " Check if we've already initialised today's log
   let l:formatted_daily_header = s:format_header(g:bujo_daily_header, a:journal) 
-  let l:daily_log = expand(g:bujo_path . a:journal . "/". strftime(g:bujo_daily_filename))
+  let l:journal_dir = expand(g:bujo_path . a:journal) 
+  let l:daily_log = l:journal_dir . "/". s:format_filename(g:bujo_daily_filename)
   if filereadable(l:daily_log) && readfile(l:daily_log, "", 1)[0] ==# l:formatted_daily_header
     return
   endif
 
-  let l:journal_dir = expand(g:bujo_path . a:journal) 
-  let l:daily_log = expand(l:journal_dir . "/". strftime(g:bujo_daily_filename))
   let l:content = [l:formatted_daily_header, ""]
 
   if s:mkdir_if_needed(a:journal) | return | endif
@@ -691,10 +694,10 @@ endfunction
 
 function! OpenDaily(...)
   let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
-  let l:daily_log = expand(g:bujo_path . l:journal . "/". strftime(g:bujo_daily_filename))
+  let l:daily_log = expand(g:bujo_path . l:journal . "/". s:format_filename(g:bujo_daily_filename))
   call s:init_daily(l:journal)
   execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
-  execute  "edit " . l:daily_log
+  execute  "edit " . fnameescape(l:daily_log)
   
 endfunction
 
@@ -752,7 +755,7 @@ endfunction
 " TODO: Handle displaying urgent tasks
 function! CreateEntry(type, is_urgent, ...)
   let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g") . (a:type ==# s:BUJO_NOTE ? "\r\n": "")
-  let l:daily_log = expand(g:bujo_path . g:bujo_journal_default_name . "/". strftime(g:bujo_daily_filename))
+  let l:daily_log = expand(g:bujo_path . g:bujo_journal_default_name . "/". s:format_filename(g:bujo_daily_filename))
   call s:init_daily(g:bujo_journal_default_name)
   let l:content = readfile(l:daily_log)
   call writefile(s:list_append_entry(l:content, g:bujo_header_entries[a:type]["header"], g:bujo_header_entries[a:type]["list_char"], l:entry), l:daily_log)
@@ -761,7 +764,7 @@ endfunction
 " This needs to handle for month selected (required)
 function! OpenFuture(...)
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-  let l:future_log = l:journal_dir . "/" . s:format_header(g:bujo_future_filename) 
+  let l:future_log = l:journal_dir . "/" . s:format_filename(g:bujo_future_filename) 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
 
   if !filereadable(l:future_log)
@@ -786,7 +789,7 @@ function! OpenFuture(...)
 
   if a:0 == 0
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
-    execute  "edit " . l:future_log
+    execute  "edit " . fnameescape(l:future_log)
   else 
     echoerr "Future entry rappid logging not implemented."
     return
@@ -810,7 +813,8 @@ function! CreateCollection(...)
 
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
   let l:journal_index = expand(l:journal_dir) . "/index.md"
-  let l:collection_path = expand(l:journal_dir) . "/" . l:collection . ".md"
+  let l:collection_index_link = s:format_filename(l:collection) . ".md"
+  let l:collection_path = expand(l:journal_dir) . "/" . s:format_filename(l:collection) . ".md"
 
   call s:init_journal_index(g:bujo_journal_default_name)
 
@@ -840,7 +844,7 @@ endfunction
 
 function! OpenBacklog(...)
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-  let l:backlog = l:journal_dir . "/" . strftime(g:bujo_backlog_filename)
+  let l:backlog = l:journal_dir . "/" . s:format_filename(g:bujo_backlog_filename)
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
   if !filereadable(l:backlog)
     let l:content = []
@@ -860,7 +864,7 @@ function! OpenBacklog(...)
   " We do this before opening the split as we may want to do both
   if a:0 == 0
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
-    execute  "edit " . l:backlog
+    execute  "edit " . fnameescape(l:backlog)
   else
     let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:backlog)
@@ -878,7 +882,7 @@ function! OpenMonthly(...)
   endif
 
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
-  let l:monthly_log = l:journal_dir . "/" . strftime(g:bujo_monthly_filename)
+  let l:monthly_log = l:journal_dir . "/" . s:format_filename(g:bujo_monthly_filename)
 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
   if !filereadable(l:monthly_log)
@@ -927,7 +931,7 @@ function! OpenMonthly(...)
 
   if a:0 == 0 
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
-    execute  "edit " . l:monthly_log
+    execute  "edit " . fnameescape(l:monthly_log)
   else
     " TODO - MAYBE change open_monthly to open a specific month rather than rappid log
     " TODO - Or figure out a nice implementation for doing rappid logging + specifying month
@@ -961,7 +965,6 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 " Notes
 " ~~~~~~~~~~~~~~
 " TODO - vim-bujo 
-" TODO - Make file links use relative path
 " TODO - Make Vader test suite
 " TODO - Control insert/append based on entry type?
 " TODO - Replace existing window if already open, don't spam create them
