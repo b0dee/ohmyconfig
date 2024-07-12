@@ -440,19 +440,13 @@ let g:bujo_daily_task_header =  "**Tasks:**"
 let g:bujo_daily_event_header =  "**Events:**" 
 let g:bujo_daily_note_header =  "**Notes:**"
 
-" TODO - Move the core entries into a private list
-"        They are required for core functionality, not sure what 
-"        will break if they are removed, don't want to fix whatever it does though
 let g:bujo_header_entries_ordered = [
 \ s:BUJO_EVENT,
 \ s:BUJO_TASK,
 \ s:BUJO_NOTE,
 \]
 
-" TODO - Move the core entries into a private dictionary
-"        They are required for core functionality, not sure what 
-"        will break if they are removed, don't want to fix whatever it does though
-let g:bujo_header_entries = {
+let s:bujo_header_entries = {
 \ s:BUJO_EVENT: {
 \   "name": s:BUJO_EVENT,
 \   "header": g:bujo_daily_event_header,
@@ -481,6 +475,11 @@ let g:bujo_header_entries = {
 \   "backlog_enabled": v:false
 \ }
 \}
+
+" Add in custom index entries from global dictionary
+if exists("g:bujo_header_entries") 
+  call extend(s:bujo_header_entries, g:bujo_header_entries)
+endif
 
 " Options: month_long, month_short
 " 0 = Don't include header
@@ -608,7 +607,7 @@ function! s:mkdir_if_needed(journal = v:null)
 endfunction
 
 function! s:init_journal_index(journal)
-  let l:journal_dir = expand(g:bujo_path . a:journal)
+  let l:journal_dir = expand(g:bujo_path) . s:format_filename(a:journal)
   let l:journal_index = l:journal_dir . "/index.md"
   " We have already initialised index 
   if filereadable(l:journal_index) | return | endif
@@ -629,7 +628,7 @@ endfunction
 " spaces between
 function! OpenIndex(open_journal, ...)
   let l:journal = a:0 == 0 ? g:bujo_journal_default_name : join(a:000, " ")
-  let l:journal_dir = expand(g:bujo_path . l:journal)
+  let l:journal_dir = expand(g:bujo_path) . s:format_filename(l:journal)
   let l:journal_index = expand(l:journal_dir . "/index.md")
   
   " Check to see if the journal exists
@@ -658,7 +657,7 @@ endfunction
 function! s:init_daily(journal)
   " Check if we've already initialised today's log
   let l:formatted_daily_header = s:format_header(g:bujo_daily_header, a:journal) 
-  let l:journal_dir = expand(g:bujo_path . a:journal) 
+  let l:journal_dir = expand(g:bujo_path) . s:format_filename(a:journal) 
   let l:daily_log = l:journal_dir . "/". s:format_filename(g:bujo_daily_filename)
   if filereadable(l:daily_log) && readfile(l:daily_log, "", 1)[0] ==# l:formatted_daily_header
     return
@@ -669,15 +668,15 @@ function! s:init_daily(journal)
   if s:mkdir_if_needed(a:journal) | return | endif
 
   for key in g:bujo_header_entries_ordered
-    if g:bujo_header_entries[key]["daily_enabled"]
-      call add(l:content, g:bujo_header_entries[key]["header"])
+    if s:bujo_header_entries[key]["daily_enabled"]
+      call add(l:content, s:bujo_header_entries[key]["header"])
       if g:bujo_daily_include_event_header == 2
       " TODO - implement smart event inclusion in daily log
       " Will likely come after calendar integration, need a way of finding all live events
         echoerr "Smart event creation Not implemented!"
         return
       endif
-      call add(l:content, g:bujo_header_entries[key]["list_char"] . " ")
+      call add(l:content, s:bujo_header_entries[key]["list_char"] . " ")
       call add(l:content, "")
     endif
   endfor
@@ -748,22 +747,24 @@ function! s:list_append_entry(list, type_header, type_list_char, entry)
   " but when support for future daily log entries is added this may not be the case
   call insert(a:list, a:type_header, 2)
   call insert(a:list, l:list_char . a:entry, 3)
-  call insert(a:list, "", 4)
+  call insert(a:list, l:list_char, 4)
+  call insert(a:list, "", 5)
   return a:list
 endfunction
 
-" TODO: Handle displaying urgent tasks
+" TODO - Handle displaying urgent tasks
 function! CreateEntry(type, is_urgent, ...)
   let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g") . (a:type ==# s:BUJO_NOTE ? "\r\n": "")
-  let l:daily_log = expand(g:bujo_path . g:bujo_journal_default_name . "/". s:format_filename(g:bujo_daily_filename))
+  let l:journal_dir = expand(g:bujo_path) . s:format_filename(g:bujo_journal_default_name)
+  let l:daily_log = l:journal_dir . "/". s:format_filename(g:bujo_daily_filename)
   call s:init_daily(g:bujo_journal_default_name)
   let l:content = readfile(l:daily_log)
-  call writefile(s:list_append_entry(l:content, g:bujo_header_entries[a:type]["header"], g:bujo_header_entries[a:type]["list_char"], l:entry), l:daily_log)
+  call writefile(s:list_append_entry(l:content, s:bujo_header_entries[a:type]["header"], s:bujo_header_entries[a:type]["list_char"], l:entry), l:daily_log)
 endfunction
 
 " This needs to handle for month selected (required)
 function! OpenFuture(...)
-  let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
+  let l:journal_dir = expand(g:bujo_path) . s:format_filename(g:bujo_journal_default_name)
   let l:future_log = l:journal_dir . "/" . s:format_filename(g:bujo_future_filename) 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
 
@@ -776,9 +777,9 @@ function! OpenFuture(...)
       call add(l:content, substitute(substitute(g:bujo_future_month_header, "%B", month["long"], "g"), "%b", month["short"], "g"))
       call add(l:content, "")
       for key in g:bujo_header_entries_ordered
-        if g:bujo_header_entries[key]["future_enabled"]
-          call add(l:content, g:bujo_header_entries[key]["header"])
-          call add(l:content, g:bujo_header_entries[key]["list_char"] . " ")
+        if s:bujo_header_entries[key]["future_enabled"]
+          call add(l:content, s:bujo_header_entries[key]["header"])
+          call add(l:content, s:bujo_header_entries[key]["list_char"] . " ")
           call add(l:content, "")
         endif
       endfor
@@ -796,7 +797,7 @@ function! OpenFuture(...)
     let l:type = tolower(a:1)
     let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:future_log)
-    call writefile(s:list_append_entry(l:content, g:bujo_header_entries[l:type]["header"], g:bujo_header_entries[l:type]["list_char"], l:entry), l:future_log)
+    call writefile(s:list_append_entry(l:content, s:bujo_header_entries[l:type]["header"], s:bujo_header_entries[l:type]["list_char"], l:entry), l:future_log)
   endif
 endfunction
 
@@ -811,7 +812,7 @@ function! CreateCollection(...)
 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
 
-  let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
+  let l:journal_dir = expand(g:bujo_path) . s:format_filename(g:bujo_journal_default_name)
   let l:journal_index = expand(l:journal_dir) . "/index.md"
   let l:collection_index_link = s:format_filename(l:collection) . ".md"
   let l:collection_path = expand(l:journal_dir) . "/" . s:format_filename(l:collection) . ".md"
@@ -824,12 +825,13 @@ function! CreateCollection(...)
   let l:counter = 0
   for line in l:content[2:-1]
     let l:counter += 1
-    " Account for the case where we are at EOF and no empty newline
+    let l:collection_header = ". [" . l:collection_print_name . "](" . l:collection_index_link . ")"
     if line !~# substitute(g:bujo_index_list_char, "{#}", l:counter . ". ", "g") 
-      call insert(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter, "g") . ". [" . l:collection_print_name . "](" . l:collection_path . ")", l:counter + 1)
+      call insert(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter, "g") . l:collection_header, l:counter + 1)
       break
+    " Account for the case where we are at EOF and no empty newline
     elseif line ==# l:content[-1] && len(l:content) == l:counter + 2
-      call add(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter + 1, "g") . ". [" . l:collection_print_name . "](" . l:collection_path . ")")
+      call add(l:content, substitute(g:bujo_index_list_char, "{#}", l:counter + 1, "g") . l:collection_header)
     endif
   endfor
   call writefile(l:content, l:journal_index)
@@ -843,7 +845,7 @@ function! CreateCollection(...)
 endfunction
 
 function! OpenBacklog(...)
-  let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
+  let l:journal_dir = expand(g:bujo_path) . s:format_filename(g:bujo_journal_default_name)
   let l:backlog = l:journal_dir . "/" . s:format_filename(g:bujo_backlog_filename)
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
   if !filereadable(l:backlog)
@@ -851,9 +853,9 @@ function! OpenBacklog(...)
     call add(l:content, s:format_header(g:bujo_backlog_header, g:bujo_journal_default_name))
     call add(l:content, "")
     for key in g:bujo_header_entries_ordered
-      if g:bujo_header_entries[key]["backlog_enabled"]
-        call add(l:content, g:bujo_header_entries[key]["header"])
-        call add(l:content, g:bujo_header_entries[key]["list_char"] . " ")
+      if s:bujo_header_entries[key]["backlog_enabled"]
+        call add(l:content, s:bujo_header_entries[key]["header"])
+        call add(l:content, s:bujo_header_entries[key]["list_char"] . " ")
         call add(l:content, "")
       endif
     endfor
@@ -868,7 +870,7 @@ function! OpenBacklog(...)
   else
     let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:backlog)
-    call writefile(s:list_append_entry(l:content, g:bujo_header_entries[s:BUJO_TASK]["header"], g:bujo_header_entries[s:BUJO_TASK]["list_char"],  l:entry), l:backlog)
+    call writefile(s:list_append_entry(l:content, s:bujo_header_entries[s:BUJO_TASK]["header"], s:bujo_header_entries[s:BUJO_TASK]["list_char"],  l:entry), l:backlog)
   endif
 endfunction
 
@@ -881,16 +883,16 @@ function! OpenMonthly(...)
     let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
   endif
 
-  let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
+  let l:journal_dir = expand(g:bujo_path) . s:format_filename(g:bujo_journal_default_name)
   let l:monthly_log = l:journal_dir . "/" . s:format_filename(g:bujo_monthly_filename)
 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
   if !filereadable(l:monthly_log)
     let l:content = [ s:format_header(g:bujo_monthly_header), "" ]
     for header in g:bujo_header_entries_ordered
-      if g:bujo_header_entries[header]["monthly_enabled"]
-        call add(l:content, s:format_header(g:bujo_header_entries[header]["header"]))
-        call add(l:content, g:bujo_header_entries[header]["list_char"] . " ")
+      if s:bujo_header_entries[header]["monthly_enabled"]
+        call add(l:content, s:format_header(s:bujo_header_entries[header]["header"]))
+        call add(l:content, s:bujo_header_entries[header]["list_char"] . " ")
         call add(l:content, "")
       endif
     endfor
@@ -933,12 +935,12 @@ function! OpenMonthly(...)
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . fnameescape(l:monthly_log)
   else
-    " TODO - MAYBE change open_monthly to open a specific month rather than rappid log
-    " TODO - Or figure out a nice implementation for doing rappid logging + specifying month
+    " MAYBE TODO - MAYBE change open_monthly to open a specific month rather than rappid log
+    " Or figure out a nice implementation for doing rappid logging + specifying month
     let l:type = tolower(a:1)
     let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:monthly_log)
-    call writefile(s:list_append_entry(l:content, g:bujo_header_entries[l:type]["header"], g:bujo_header_entries[l:type]["list_char"], l:entry), l:monthly_log)
+    call writefile(s:list_append_entry(l:content, s:bujo_header_entries[l:type]["header"], s:bujo_header_entries[l:type]["list_char"], l:entry), l:monthly_log)
   endif
 
 endfunction
@@ -978,28 +980,28 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 " TODO - Set filetype, link syntax with markdown, and introduce motions within files
 "        i.e. '<leader><<' in daily log can prompt
 "        user to specify month and will migrate entry to future log etc., >> will move to next monthly log
-" TODO: Implement Weekly Command
+" TODO - Implement Weekly Command
 " - Launches to a week in review session
-" TODO: Implement RenameJournal Command
+" TODO - Implement RenameJournal Command
 " - bang: false
-" TODO: Implement RenameCollection Command
+" TODO - Implement RenameCollection Command
 " - bang: false
-" TODO: Implement FutureEvent Command
+" TODO - Implement FutureEvent Command
 " - bang: true
 " - bang means first arg is month/date string
-" TODO: Implement FutureTask Command
+" TODO - Implement FutureTask Command
 " - bang: true
 " - bang means first arg is month/date string
-" TODO: Implement FutureNote Command
+" TODO - Implement FutureNote Command
 " - bang: true
 " - bang means first arg is month/date string
-" TODO: Implement ListTasks Command
+" TODO - Implement ListTasks Command
 " - bang: true
 " - bang means list tasks in ALL journals, arguments provided are used as journal or default is used 
-" TODO: Implement ListEvents Command
+" TODO - Implement ListEvents Command
 " - bang: true
 " - bang means list events in ALL journals, arguments provided are used as journal or default is used 
-" TODO: Implement Reflect Command
+" TODO - Implement Reflect Command
 " - ability to have this be done automatically/ prompt (perhaps controllable so can be silenced) when
 "   launching any bujo command
 " - bang: false
