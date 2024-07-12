@@ -751,9 +751,8 @@ function! s:create_entry(type, is_urgent, ...)
   call writefile(s:list_insert(l:content, a:type, g:bujo_header_entries[a:type]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
 endfunction
 
-" TODO - Implement new_entry logic
 " This needs to handle for month selected (required)
-function! s:open_future(new_entry, ...)
+function! s:open_future(...)
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
   let l:future_log = l:journal_dir . "/" . s:format_header(g:bujo_future_filename) 
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
@@ -778,14 +777,16 @@ function! s:open_future(new_entry, ...)
     endfor
   endif
 
-  if !a:new_entry
+  if a:0 == 0
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:future_log
-  else
-    echoerr "Future Log Quick Creation not implemented!"
+  else 
+    echoerr "Future entry quick creation not implemented."
     return
-    let l:content = readfile(l:daily_log)
-    call writefile(s:list_insert(l:content, a:type, g:bujo_header_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
+    let l:type = tolower(a:1)
+    let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
+    let l:content = readfile(l:future_log)
+    call writefile(s:list_insert(l:content, l:type, g:bujo_header_entries[l:type]["list_char"] . " " . l:entry, s:BUJO_FUTURE), l:future_log)
   endif
 endfunction
 
@@ -830,7 +831,7 @@ function! s:create_collection(...)
 
 endfunction
 
-function! s:open_backlog(open_backlog, ...)
+function! s:open_backlog(...)
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
   let l:backlog = l:journal_dir . "/" . strftime(g:bujo_backlog_filename)
   if s:mkdir_if_needed(g:bujo_journal_default_name) | return | endif
@@ -851,24 +852,24 @@ function! s:open_backlog(open_backlog, ...)
   endif
   " Check if we need to create an entry
   " We do this before opening the split as we may want to do both
-  if a:0 != 0
-    let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
-    let l:content = readfile(l:backlog)
-    call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_header_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
-  endif
-  if a:open_backlog
+  if a:0 == 0
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:backlog
+  else
+    let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
+    let l:content = readfile(l:backlog)
+    let l:list_item = g:bujo_header_entries[s:BUJO_TASK]["list_char"] . (g:bujo_header_entries[s:BUJO_TASK]["list_char"] != "" ? " " : "" )
+    call writefile(s:list_insert(l:content, s:BUJO_TASK, l:list_item. l:entry, s:BUJO_BACKLOG), l:backlog)
   endif
 endfunction
 
-function! s:open_monthly(create_entry_only, ...)
+function! s:open_monthly(...)
   if a:0 > 0 && a:0 < 2
     echoerr "Monthly command requires at least 2 arguments if providing any."
     return
   elseif a:0 > 0
-    let l:type = a:1 
-    let l:entry = join(a:000[1:-1], " ")
+    let l:type = tolower(a:1) 
+    let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
   endif
 
   let l:journal_dir = expand(g:bujo_path . g:bujo_journal_default_name)
@@ -919,16 +920,16 @@ function! s:open_monthly(create_entry_only, ...)
     call writefile(l:content, l:monthly_log)
   endif
 
-  if a:0 > 0 
-    let l:entry = join(a:000, " ")
-    let l:content = readfile(l:monthly_log)
-    call writefile(s:list_insert(l:content, s:BUJO_TASK, g:bujo_header_entries[s:BUJO_TASK]["list_char"] . " " . l:entry, s:BUJO_BACKLOG), l:backlog)
-  endif
-
-  if !a:create_entry_only
+  if a:0 == 0 
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:monthly_log
+  else
+    let l:type = tolower(a:1)
+    let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
+    let l:content = readfile(l:monthly_log)
+    call writefile(s:list_insert(l:content, l:type, g:bujo_header_entries[l:type]["list_char"] . " " . l:entry, s:BUJO_MONTHLY), l:monthly_log)
   endif
+
 endfunction
 
 " ------------------------------ 
@@ -941,10 +942,10 @@ command! -nargs=+ -bang Event call s:create_entry(s:BUJO_EVENT, <bang>0, <f-args
 command! -nargs=+ -bang Note call s:create_entry(s:BUJO_NOTE, <bang>0, <f-args>)
 " Backlog:
 " Notes: Providing '!' causes it to open backlog, otherwise just add entry to list
-command! -nargs=* -bang Backlog call s:open_backlog(<bang>0, <f-args>)
-command! -nargs=* -bang Future call s:open_future(<bang>0, <f-args>) 
+command! -nargs=* Backlog call s:open_backlog(<f-args>)
+command! -nargs=* Future call s:open_future(<f-args>) 
 command! -nargs=+ Collection call s:create_collection(<f-args>)
-command! -nargs=* -bang Monthly call s:open_monthly(<bang>0, <f-args>)
+command! -nargs=* Monthly call s:open_monthly(<f-args>)
 " Creating command names to guage what is wanted/needed 
 " Creating the 'black box' based on that
 " APIs here are just template
