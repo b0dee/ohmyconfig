@@ -104,6 +104,7 @@ Plug 'mattn/calendar-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'dhruvasagar/vim-zoom'
+Plug 'junegunn/vader.vim'
 
 " UI
 Plug 'markonm/traces.vim'
