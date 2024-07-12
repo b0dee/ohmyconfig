@@ -924,6 +924,7 @@ function! s:open_monthly(...)
     execute (g:bujo_split_right ? "botright" : "topleft") . " vertical " . ((g:bujo_daily_winsize > 0)? (g:bujo_daily_winsize*winwidth(0))/100 : -g:bujo_daily_winsize) "new" 
     execute  "edit " . l:monthly_log
   else
+    " TODO - MAYBE change open_monthly to open a specific month rather than quick create
     let l:type = tolower(a:1)
     let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:monthly_log)
@@ -956,6 +957,7 @@ command! -nargs=* Monthly call s:open_monthly(<f-args>)
 " Notes
 " ~~~~~~~~~~~~~~
 " TODO - vim-bujo 
+" TODO - sort out issue with recording a weekly rolling daily log
 " - make files saved replace spaces with underscores
 " - migration functionality
 " - motions to navigate/ prepopulate command
@@ -968,10 +970,28 @@ command! -nargs=* Monthly call s:open_monthly(<f-args>)
 "     - bang: false
 "   - RenameCollection
 "     - bang: false
-"   - Tasks
+"   - FutureEvent
+"     - bang: true
+"     - bang means first arg is month/date string
+"   - FutureTask
+"     - bang: true
+"     - bang means first arg is month/date string
+"   - FutureNote
+"     - bang: true
+"     - bang means first arg is month/date string
+"   - ListTasks
+"     - bang: true
+"     - bang means list tasks in ALL journals, arguments provided are used as journal or default is used 
+"   - ListEvents
+"     - bang: true
+"     - bang means list events in ALL journals, arguments provided are used as journal or default is used 
+"   - Reflect
+"     - ability to have this be done automatically/ prompt (perhaps controllable so can be silenced) when
+"       launching any bujo command
 "     - bang: false
-"   - Events
-"     - bang: false
+"     - Arguments provided are used as journal or default is used 
+"     - Initialises next weeks daily log showing the past week in horizontal split and monthly log in 
+"       vert split to move tasks in where needed 
 " - Automatic git pull, commit and push 
 " - Cron scheduling of monthly headers (to auto populate table)
 " TODO - AutoPairs
@@ -981,7 +1001,9 @@ command! -nargs=* Monthly call s:open_monthly(<f-args>)
 " TODO - vim-zoom
 " - Fork and add in a scratch buffer, created/destroyed on toggle to prevent quit during zoom 
 "   (perhaps autocmd restore state if go into this window)
-" 
+" TODO - monthly update table setting the row for today to have a link to daily log
+" TODO - General
+"   - Add syntax highlight like TODO has for ISSUE and BUG etc.
 " vim-bujo Ideas: 
 " - Having commands be smart enough to put things under appropriate header when in format of 
 "  `:Backlog An Example Header With Spaces: Task To Be added with spaces`
