@@ -696,45 +696,29 @@ function! s:open_daily(...)
   
 endfunction
 
-function! s:list_insert(list, type, entry, kind, stop_pattern = v:null)
+function! s:append_entry_to_list(list, type_header, type_list_char, entry) 
   let l:index = 0
+  let l:list_char = a:type_list_char . (a:type_list_char == "" ? "" : " " )
   for line in a:list
-    let l:index += 1
-    if line ==# a:stop_pattern | break | endif
-    if line ==# g:bujo_header_entries[a:type]["header"] && g:bujo_header_entries[a:type][a:kind . "_enabled"]
-      call insert(a:list, a:entry, l:index)
-      return a:list
-    endif
-  endfor
-
-  " If we reach here, we've failed to locate the header
-  " The only 'safe' way I can conceive to add this in is 
-  " to locate todays header and insert it 2 lines below 
-  " (leaving blank line below header)
-  call insert(a:list, g:bujo_header_entries[a:type]["header"], 2)
-  call insert(a:list, g:bujo_default_list_char . " " . l:entry, 3)
-  call insert(a:list, "", 4)
-  return a:list
-endfunction
-
-function! s:list_append(list, type, entry) 
-  let l:index = 0
-  for line in a:list
-    let l:index += 1
-    if line ==# g:bujo_header_entries[a:type]["header"] && g:bujo_header_entries[a:type][a:kind . "_enabled"]
-      for item in a:list[l:index - 1:-1]
-        if item !=# s:bujo_index_entries[a:type]["list_char"]
-          call insert(a:list, a:entry, l:index - 1)
+    if line ==# a:type_header
+      for item in a:list[l:index:-1]
+        if item ==# l:list_char
+          call insert(a:list, l:list_char . a:entry, l:index)
+          return a:list
         endif
+        let l:index += 1
       endfor
-      return a:list
+      break
     endif
+    let l:index += 1
   endfor
 
   " If we reach here, we've failed to locate the header
   " The only 'safe' way I can conceive to add this in is 
   " to locate todays header and insert it 2 lines below 
   " (leaving blank line below header)
+  " TODO - This doesn't actually 'find todays header' it just inserts it a the top of the file
+  " but when support for future daily log entries is added this may not be the case
   call insert(a:list, g:bujo_header_entries[a:type]["header"], 2)
   call insert(a:list, g:bujo_default_list_char . " " . l:entry, 3)
   call insert(a:list, "", 4)
@@ -748,7 +732,7 @@ function! s:create_entry(type, is_urgent, ...)
   let l:journal_print_name = substitute(g:bujo_journal_default_name, "\\<\\([a-z]\\)", "\\U\\1", "g")
   call s:init_daily(g:bujo_journal_default_name)
   let l:content = readfile(l:daily_log)
-  call writefile(s:list_insert(l:content, a:type, g:bujo_header_entries[a:type]["list_char"] . " " . l:entry, s:BUJO_DAILY), l:daily_log)
+  call writefile(s:append_entry_to_list(l:content, g:bujo_header_entries[a:type]["header"], g:bujo_header_entries[a:type]["list_char"], l:entry), l:daily_log)
 endfunction
 
 " This needs to handle for month selected (required)
@@ -786,7 +770,7 @@ function! s:open_future(...)
     let l:type = tolower(a:1)
     let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:future_log)
-    call writefile(s:list_insert(l:content, l:type, g:bujo_header_entries[l:type]["list_char"] . " " . l:entry, s:BUJO_FUTURE), l:future_log)
+    call writefile(s:append_entry_to_list(l:content, g:bujo_header_entries[l:type]["header"], g:bujo_header_entries[l:type]["list_char"], l:entry), l:future_log)
   endif
 endfunction
 
@@ -858,8 +842,7 @@ function! s:open_backlog(...)
   else
     let l:entry = substitute(join(a:000, " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:backlog)
-    let l:list_item = g:bujo_header_entries[s:BUJO_TASK]["list_char"] . (g:bujo_header_entries[s:BUJO_TASK]["list_char"] != "" ? " " : "" )
-    call writefile(s:list_insert(l:content, s:BUJO_TASK, l:list_item. l:entry, s:BUJO_BACKLOG), l:backlog)
+    call writefile(s:append_entry_to_list(l:content, g:bujo_header_entries[s:BUJO_TASK]["header"], g:bujo_header_entries[s:BUJO_TASK]["list_char"],  l:entry), l:backlog)
   endif
 endfunction
 
@@ -928,7 +911,7 @@ function! s:open_monthly(...)
     let l:type = tolower(a:1)
     let l:entry = substitute(join(a:000[1:-1], " "), "\\(^[a-z]\\)", "\\U\\1", "g")
     let l:content = readfile(l:monthly_log)
-    call writefile(s:list_insert(l:content, l:type, g:bujo_header_entries[l:type]["list_char"] . " " . l:entry, s:BUJO_MONTHLY), l:monthly_log)
+    call writefile(s:append_entry_to_list(l:content, g:bujo_header_entries[l:type]["header"], g:bujo_header_entries[l:type]["list_char"], l:entry), l:monthly_log)
   endif
 
 endfunction
