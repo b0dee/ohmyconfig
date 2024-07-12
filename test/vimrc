@@ -1,4 +1,5 @@
 source ../common/.vimrc
+let g:bujo_journal_default_name = "Vader"
 filetype off
 let &runtimepath .= ','.expand('<sfile>:p:h:h')
 filetype plugin indent on
