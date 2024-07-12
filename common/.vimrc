@@ -440,12 +440,18 @@ let g:bujo_daily_task_header =  "**Tasks:**"
 let g:bujo_daily_event_header =  "**Events:**" 
 let g:bujo_daily_note_header =  "**Notes:**"
 
+" TODO - Move the core entries into a private list
+"        They are required for core functionality, not sure what 
+"        will break if they are removed, don't want to fix whatever it does though
 let g:bujo_header_entries_ordered = [
 \ s:BUJO_EVENT,
 \ s:BUJO_TASK,
 \ s:BUJO_NOTE,
 \]
 
+" TODO - Move the core entries into a private dictionary
+"        They are required for core functionality, not sure what 
+"        will break if they are removed, don't want to fix whatever it does though
 let g:bujo_header_entries = {
 \ s:BUJO_EVENT: {
 \   "name": s:BUJO_EVENT,
@@ -479,7 +485,7 @@ let g:bujo_header_entries = {
 " Options: month_long, month_short
 " 0 = Don't include header
 " 1 = Include header
-" TODO - 2 = Smart inclusion only if events scheduled for this day
+" 2 = Smart inclusion only if events scheduled for this day
 let g:bujo_daily_include_event_header = 0
 
 " Future Log vars
@@ -565,7 +571,6 @@ let g:bujo_months = [
   \ { "short": "Nov", "long": "November", "days": 30 },
   \ { "short": "Dec", "long": "December", "days": 31 },
 \ ]
-" TODO - Add customisable list elements
 " i.e. let g:bujo_migrated_to_future = '<' -- Migrated to future log
 "      > = Migrated to next week look
 " etc
@@ -964,45 +969,42 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 " TODO - Future log: auto scroll to put this month header at top line
 " TODO - Future log: open a different year
 " TODO - Future log: rappid log
-" TODO - sort out issue with recording a weekly rolling daily log
-" - make files saved replace spaces with underscores
-" - migration functionality
-" - motions to navigate/ prepopulate command
-" - set filetype, link syntax with markdown, and introduce motions within files i.e. '<leader><<' in daily log can prompt
-"   user to specify month and will migrate entry to future log etc., >> will move to next monthly log
-" - Implement Commands: 
-"   - Weekly
-"     - Launches to a week in review session
-"   - RenameJournal
-"     - bang: false
-"   - RenameCollection
-"     - bang: false
-"   - FutureEvent
-"     - bang: true
-"     - bang means first arg is month/date string
-"   - FutureTask
-"     - bang: true
-"     - bang means first arg is month/date string
-"   - FutureNote
-"     - bang: true
-"     - bang means first arg is month/date string
-"   - ListTasks
-"     - bang: true
-"     - bang means list tasks in ALL journals, arguments provided are used as journal or default is used 
-"   - ListEvents
-"     - bang: true
-"     - bang means list events in ALL journals, arguments provided are used as journal or default is used 
-"   - Reflect
-"     - ability to have this be done automatically/ prompt (perhaps controllable so can be silenced) when
-"       launching any bujo command
-"     - bang: false
-"     - Arguments provided are used as journal or default is used 
-"     - Initialises next weeks daily log showing the past week in horizontal split and monthly log in 
-"       vert split to move tasks in where needed 
-" - Automatic git pull, commit and push 
-" - Cron scheduling of monthly headers (to auto populate table)
-" TODO - AutoPairs
-" - Fix inserting closing paren when we there already exists one
+" TODO - Sort out issue with recording a weekly rolling daily log
+" TODO - Migration functionality
+" TODO - Motions to navigate/ prepopulate command
+" TODO - Set filetype, link syntax with markdown, and introduce motions within files
+"        i.e. '<leader><<' in daily log can prompt
+"        user to specify month and will migrate entry to future log etc., >> will move to next monthly log
+" TODO: Implement Weekly Command
+" - Launches to a week in review session
+" TODO: Implement RenameJournal Command
+" - bang: false
+" TODO: Implement RenameCollection Command
+" - bang: false
+" TODO: Implement FutureEvent Command
+" - bang: true
+" - bang means first arg is month/date string
+" TODO: Implement FutureTask Command
+" - bang: true
+" - bang means first arg is month/date string
+" TODO: Implement FutureNote Command
+" - bang: true
+" - bang means first arg is month/date string
+" TODO: Implement ListTasks Command
+" - bang: true
+" - bang means list tasks in ALL journals, arguments provided are used as journal or default is used 
+" TODO: Implement ListEvents Command
+" - bang: true
+" - bang means list events in ALL journals, arguments provided are used as journal or default is used 
+" TODO: Implement Reflect Command
+" - ability to have this be done automatically/ prompt (perhaps controllable so can be silenced) when
+"   launching any bujo command
+" - bang: false
+" - Arguments provided are used as journal or default is used 
+" - Initialises next weeks daily log showing the past week in horizontal split and monthly log in 
+"   vert split to move tasks in where needed 
+" TODO - Automatic git pull, commit and push 
+" TODO - Cron scheduling of monthly headers (to auto populate table)
 " TODO - Markdown
 " - fix markdown opening local file links
 " TODO - vim-zoom
@@ -1010,6 +1012,7 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 "   (perhaps autocmd restore state if go into this window)
 " TODO - monthly update table setting the row for today to have a link to daily log
 " TODO - General
+" TODO - AutoPairs - Fix inserting closing paren when we there already exists one
 " TODO - Add syntax highlight like TODO has for ISSUE and BUG etc.
 " TODO - Go through Vim help manuals as missed loads
 " TODO - Go through plugins and see what you're not fully utilising
