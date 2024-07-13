@@ -579,6 +579,10 @@ let g:bujo_months = [
 let g:bujo_vader_testing = v:false
 let g:bujo_vader_mkdir_choice = 1
 
+" EasyAlign
+vmap <leader>a <Plug>(EasyAlign)
+nmap <leader>a <Plug>(EasyAlign)
+
 " ------------------------------ 
 "  autoload
 " ------------------------------ 
