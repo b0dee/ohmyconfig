@@ -105,6 +105,7 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'dhruvasagar/vim-zoom'
 Plug 'junegunn/vader.vim'
+Plug 'junegunn/vim-easy-align'
 
 " UI
 Plug 'markonm/traces.vim'
