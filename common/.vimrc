@@ -970,7 +970,7 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 
 
 " Global wrappers made so Vader can run unit tests
-function Vader_FormatFilename(filename)
+function! Vader_FormatFilename(filename)
   call s:format_filename(a:filename)
 endfunction
 
