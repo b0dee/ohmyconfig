@@ -1,0 +1,25 @@
+Execute (Start Unit: mkdir_if_needed):
+
+Execute (- Using default journal directory):
+    call Vader_MkdirIfNeeded()
+    Assert isdirectory(Vader_GetJournalPath() )
+    call delete(Vader_GetJournalPath() , "rf")
+    Assert !isdirectory(Vader_GetJournalPath() ), "Failed to delete test directory"
+
+Execute (- Using uppercase journal name):
+    call Vader_MkdirIfNeeded("VADER_UPPERCASE")
+    Assert isdirectory(Vader_GetJournalPath("VADER_UPPERCASE"))
+    call delete(Vader_GetJournalPath("VADER_UPPERCASE"), "rf")
+    Assert !isdirectory(Vader_GetJournalPath("VADER_UPPERCASE")), "Failed to delete test directory"
+
+" Uncomment when we've implemented the replacement logic
+" Execute (- Using special characters):
+"     AssertThrows call Vader_MkdirIfNeeded("VADER_$P£C!4L./#")
+"     Assert !isdirectory(Vader_GetJournalPath("VADER_$P£C!4L./#"))
+    
+Execute (- Using space character):
+    call Vader_MkdirIfNeeded("VADER SPACES")
+    Assert isdirectory(Vader_GetJournalPath("VADER SPACES"))
+    call delete(Vader_GetJournalPath("VADER SPACES"), "rf")
+    Assert !isdirectory(Vader_GetJournalPath("VADER SPACES")), "Failed to delete test directory"
+    

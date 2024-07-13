@@ -1,0 +1,21 @@
+# Setup tests
+
+Execute (Set variables for test execution):
+  let g:bujo_journal_default_name = "Vader"
+  let g:bujo_vader_testing = v:true
+  let g:bujo_vader_mkdir_choice = 1
+
+Execute (Creating helper functions):
+  let seed = srand(localtime())
+  function! RandString(len, sep = "")
+    for i in range(len - 1)
+     let result = nr2char((rand(seed) % 95) + 32) . a:sep
+    endfor
+    return result
+  endfunction
+
+Include (Remove any existing test journals): setup/teardown.vader
+
+
+
+
