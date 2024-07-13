@@ -574,6 +574,10 @@ let g:bujo_months = [
 "      > = Migrated to next week look
 " etc
 
+" Vader
+let g:bujo_vader_testing = v:false
+let g:bujo_vader_mkdir_choice = 1
+
 " ------------------------------ 
 "  autoload
 " ------------------------------ 
@@ -588,16 +592,15 @@ endfunction
 
 " mkdir_if_needed
 " Returns true if user cancelled, false if already exists/created directory
-function! s:mkdir_if_needed(journal = v:null)
+function! s:mkdir_if_needed(journal = g:bujo_journal_default_name)
   let l:journal_dir = tolower(expand(g:bujo_path). a:journal)
   if isdirectory(l:journal_dir)
     return v:false
 	endif
 
   let l:journal_print_name = substitute(a:journal, "\\<\\([a-z]\\)", "\\U\\1", "g")
-  let l:choice = confirm("Creating new journal `" . l:journal_print_name . "`. Continue Y/n (default: yes)?",
-                        \ "&Yes\n&No")
-  if choice != 1 
+  let choice = g:bujo_vader_testing ? g:bujo_vader_mkdir_choice : confirm("Creating new journal `" . l:journal_print_name . "`. Continue Y/n (default: yes)?","&Yes\n&No")
+  if l:choice != 1 
     echo "Aborting journal creation"
     return v:true
   endif
@@ -647,7 +650,7 @@ function! OpenIndex(open_journal, ...)
     call append(0, l:content)
     setlocal readonly nomodifiable
   else
-    let l:journal_index = expand(g:bujo_path . l:journal . "/index.md")  
+    let l:journal_index = tolower(expand(g:bujo_path) . l:journal . "/index.md")
     call s:init_journal_index(l:journal)
     execute l:cmd 
     execute "edit " . fnameescape(l:journal_index)
@@ -705,7 +708,7 @@ function! s:list_insert_entry(list, type_header, type_list_char, entry, stop_pat
   let l:list_char = a:type_list_char . (a:type_list_char == "" ? "" : " " )
   for line in a:list
     let l:index += 1
-    if line ==# a:stop_pattern | break | endif
+    if a:stop_pattern isnot v:null && line ==# a:stop_pattern | break | endif
     if line ==# a:type_header
       call insert(a:list, l:list_char . a:entry, l:index)
       return a:list
@@ -718,7 +721,8 @@ function! s:list_insert_entry(list, type_header, type_list_char, entry, stop_pat
   " (leaving blank line below header)
   call insert(a:list, a:type_header, 2)
   call insert(a:list, l:list_char . a:entry, 3)
-  call insert(a:list, "", 4)
+  call insert(a:list, l:list_char, 4)
+  call insert(a:list, "", 5)
   return a:list
 endfunction
 
@@ -963,13 +967,52 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 " command! -nargs=* -bang TaskList call s:list_tasks(<bang>0, <f-args>)
 " command! -nargs=* -bang EventList call s:list_events(<bang>0, <f-args>)
 
+
+" Global wrappers made so Vader can run unit tests
+function Vader_FormatFilename(filename)
+  call s:format_filename(a:filename)
+endfunction
+
+function! Vader_FormatHeader(header, journal = g:bujo_journal_default_name) 
+  call s:format_header(a:header, a:journal) 
+endfunction
+
+function! Vader_MkdirIfNeeded(journal = v:null)
+  if a:journal isnot v:null
+    return s:mkdir_if_needed(a:journal)
+  else
+    return s:mkdir_if_needed()
+  endif
+endfunction
+
+function! Vader_ListInsertEntry(list, type_header, type_list_char, entry, stop_pattern = v:null)
+  return s:list_insert_entry(a:list, a:type_header, a:type_list_char, a:entry, a:stop_pattern)
+endfunction
+
+function! Vader_ListAppendEntry(list, type_header, type_list_char, entry) 
+  return s:list_append_entry(a:list, a:type_header, a:type_list_char, a:entry) 
+endfunction
+
+function! Vader_GetJournalPath(journal = g:bujo_journal_default_name)
+  return tolower(expand(g:bujo_path). a:journal)
+endfunction
+
+function! Vader_GetInternalVariable(var)
+  return get(s:, a:var, "Failed to find " . a:var . " in s:")
+endfunction
+
 " ~~~~~~~~~~~~~~
 " Notes
 " ~~~~~~~~~~~~~~
 " TODO - vim-bujo 
-" TODO - Make Vader test suite
+" TODO - Make Vader test suite with expectations
 " TODO - Control insert/append based on entry type?
+" TODO - Make filenames replace special characters
 " TODO - Replace existing window if already open, don't spam create them
+" TODO - Make journal index use list_append_entry 
+"        by providing a splice of list then replacing the remainder of the
+"        file with whats returned from list_append_entry
+" TODO - Delete Journal
 " TODO - Future log: to only include months from init forward (i.e. initialised in july has jul - dec)
 " TODO - Future log: auto scroll to put this month header at top line
 " TODO - Future log: open a different year
@@ -977,6 +1020,8 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 " TODO - Sort out issue with recording a weekly rolling daily log
 " TODO - Migration functionality
 " TODO - Motions to navigate/ prepopulate command
+" TODO - List: list_replace_entry
+" TODO - Index: On open index update daily log entry to point to the correct daily file
 " TODO - Set filetype, link syntax with markdown, and introduce motions within files
 "        i.e. '<leader><<' in daily log can prompt
 "        user to specify month and will migrate entry to future log etc., >> will move to next monthly log
@@ -1021,6 +1066,7 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 " TODO - Add syntax highlight like TODO has for ISSUE and BUG etc.
 " TODO - Go through Vim help manuals as missed loads
 " TODO - Go through plugins and see what you're not fully utilising
+" TODO - Try remove Tabular dependency from Vi-Mark replace with junegunn easy align?
 " vim-bujo Ideas: 
 " - Having commands be smart enough to put things under appropriate header when in format of 
 "  `:Backlog An Example Header With Spaces: Task To Be added with spaces`
