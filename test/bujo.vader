@@ -18,15 +18,6 @@ Execute (Initialise Index using `:Index`):
   :Index
   :q
 
-" Expect: 
-"   # Vader Index
-
-"   1. [Future Log](future_2024.md)
-"   2. [Monthly Log](monthly_2024_07.md)
-"   3. [Daily Log](daily_2024-07.md)
-"   4. [Backlog](backlog.md)
-
-
 Execute (Create tasks on an existing journal): 
   :Task 1st test task
   :Task 2nd test task
@@ -52,6 +43,8 @@ Execute (Create tasks on an existing journal):
   :Collection 4th test collection
   
 Execute (Open Logs):
+  " TODO - When replacing existing windows is implemented
+  "      - Add check to make sure window is replaced correctly (requires different setups i.e. one with vsplit, one with hsplit, multi of each etc.)
   :Today
   :q
   :Backlog
@@ -61,14 +54,3 @@ Execute (Open Logs):
   :Future
   :q
 
-
-#Expect:
-#  :Backlog 1st test backlog
-#  :Backlog 2nd test backlog
-#  :Backlog 3rd test backlog
-#  :Backlog 4th test backlog
-
-
-
-# TODO - Create tests with expectation logic so tests can pass/fail based on input
-# Split this out into separate files
