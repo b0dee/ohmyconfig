@@ -5,11 +5,14 @@ Execute (Starting vim-bujo test suite):
 
 Include (Initialise test suite): setup/init.vader
 
+Include: unit/format_filename.vader
+
 Include: unit/mkdir_if_needed.vader
 
 Include: unit/list_append_entry.vader
 
 Include: unit/list_insert_entry.vader
+
 
 Execute (Initialise Index using `:Index`): 
   :Index
