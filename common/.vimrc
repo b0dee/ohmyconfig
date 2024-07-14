@@ -589,7 +589,7 @@ nmap <leader>a <Plug>(EasyAlign)
 " ------------------------------ 
 
 function! s:format_filename(filename) 
-  return tolower(substitute(strftime(a:filename), " ", "_", "g"))
+  return tolower(substitute(substitute(strftime(a:filename), " ", "_", "g"), '[!"£$%^&*;:''><\\\/|,]', "", "g"))
 endfunction
 
 function! s:format_header(header, journal = g:bujo_journal_default_name) 
@@ -976,7 +976,7 @@ command! -nargs=* Monthly call OpenMonthly(<f-args>)
 
 " Global wrappers made so Vader can run unit tests
 function! Vader_FormatFilename(filename)
-  call s:format_filename(a:filename)
+  return s:format_filename(a:filename)
 endfunction
 
 function! Vader_FormatHeader(header, journal = g:bujo_journal_default_name) 
