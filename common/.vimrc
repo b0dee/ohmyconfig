@@ -106,6 +106,7 @@ Plug 'junegunn/fzf.vim'
 Plug 'dhruvasagar/vim-zoom'
 Plug 'junegunn/vader.vim'
 Plug 'junegunn/vim-easy-align'
+Plug 'junegunn/vim-peekaboo'
 
 " UI
 Plug 'markonm/traces.vim'
