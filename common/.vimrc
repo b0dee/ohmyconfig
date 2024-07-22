@@ -328,12 +328,7 @@ function! ShowDocumentation()
 endfunction
 
 function! RelativeOrAbsolutePath() abort
-  let cwd = getcwd()
-  if has('win32')
-    let l:home = substitute($HOME, '\\', '\\\\', 'g')
-    let cwd = substitute(cwd, l:home, '~', "")
-  endif
-  return cwd
+  return substitute(getcwd(), $HOME, "~", "")
 endfunction
 
 " ################################
