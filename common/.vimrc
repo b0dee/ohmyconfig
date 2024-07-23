@@ -110,6 +110,9 @@ Plug 'junegunn/vim-peekaboo'
 Plug 'airblade/vim-matchquote'
 Plug 'machakann/vim-swap'
 Plug 'matze/vim-move'
+Plug 'puremourning/vimspector'
+Plug 'dense-analysis/ale'
+Plug 'OmniSharp/omnisharp-vim'
 
 " UI
 Plug 'markonm/traces.vim'
@@ -262,6 +265,41 @@ augroup qfpreview
     \ | let b:gitgutter_was_enabled = gitgutter#utility#getbufvar(expand('<abuf>'), 'enabled')
     \ | call feedkeys("p")
 augroup END
+" ALE
+let g:ale_disable_lsp = 1 "  Let CoC do it's job
+let g:ale_linters = { 'cs': ['OmniSharp'] }
+let g:ale_cursor_detail = 1
+let g:ale_floating_preview = 1
+
+" OmniSharp
+let g:OmniSharp_server_use_mono = 1
+let g:OmniSharp_server_use_net6 = 1
+let g:OmniSharp_highlighting = 0
+let g:OmniSharp_coc_snippet = 1
+let g:OmniSharp_selector_ui = 'fzf'
+let g:OmniSharp_popup_position = 'peek'
+let g:OmniSharp_popup_options = {
+\ 'highlight': 'Normal',
+\ 'padding': [0],
+\ 'border': [1],
+\ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+\ 'borderhighlight': ['ModeMsg']
+\}
+" \ 'close': '<Esc>',
+let g:OmniSharp_popup_mappings = {
+\ 'sigNext': '<C-n>',
+\ 'sigPrev': '<C-p>',
+\ 'pageDown': ['<C-f>', '<PageDown>'],
+\ 'pageUp': ['<C-b>', '<PageUp>'],
+\ 'lineDown': '<C-j>',
+\ 'lineUp': '<C-k>',
+\ 'sigParamNext': '<C-l>',
+\ 'sigParamPrev': '<C-h>'
+\}
+let g:OmniSharp_highlight_groups = {
+\ 'ExcludedCode': 'NonText'
+\}
+
 " CoC
 let g:coc_user_config = {
   \ 'floatFactory.floatConfig': {
@@ -293,6 +331,7 @@ let g:coc_global_extensions= [
   \ 'coc-tsserver',
   \ 'coc-vimlsp',
   \ 'coc-xml',
+  \ 'coc-marketplace'
 \ ]
 
 " Markdown
@@ -310,6 +349,17 @@ let g:netrw_browse_split = 4
 " Calendar
 let g:calendar_monday = 1
 let g:calendar_diary= $HOME . '/repos/diary'
+
+" Vimspector
+let g:vimspector_enable_mappings = 'HUMAN'
+let g:vimspector_install_gadgets=[ '--all', 'netcoredbg', 'vscode-js-debug' ]
+set noequalalways
+let g:vimspector_base_dir = g:plug_home . '/vimspector'
+if has('win32')
+    let g:vimspector_base_dir = substitute(g:vimspector_base_dir, '/', '\', 'g')
+endif
+let &runtimepath = &runtimepath . ',' . g:vimspector_base_dir
+
 
 " ################################
 " #                              #
@@ -369,10 +419,7 @@ nmap <silent>gG :G<CR>
 nmap <silent><leader>g :G<CR>
 
 " short hands for Git Gutter magic
-cnoreabbrev ShowChanges GitGutterLineHighlightsEnable
-cnoreabbrev HideChanges GitGutterLineHighlightsDisable
-cnoreabbrev ToggleChanges GitGutterLineHighlightsToggle
-cnoreabbrev Stage GitGutterPreviewHunk
+cnoreabbrev Changes GitGutterLineHighlightsToggle
 
 
 " GoTo code navivgation
