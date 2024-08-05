@@ -36,6 +36,3 @@ read -p "Copy the above public key into your GitHub SSH keys and press any key t
 
 [[ -d ~/repos/ohmyconfig ]] || echo [+] Cloning b0dee/ohmyconfig && git clone git@github.com:b0dee/ohmyconfig.git ~/repos/ohmyconfig
 
-[[ -d ~/repos/vimwiki ]] || echo [+] Cloning b0dee/vimwiki && git clone git@github.com:b0dee/vimwiki.git ~/repos/vimiki 
-
-[[ -d ~/vimwiki ]] || echo [+] Creating symlink in $HOME to ~/repos/vimwiki && ln -s ~/repos/vimwiki ~/vimwiki
