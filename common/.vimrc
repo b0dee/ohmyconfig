@@ -93,7 +93,7 @@ Plug 'gcmt/taboo.vim'
 Plug 'mbbill/undotree'
 Plug 'tpope/vim-vinegar'
 Plug 'godlygeek/tabular' | Plug 'b0dee/vi-mark'
-Plug 'b0dee/Auto-Pairs'
+Plug 'LunarWatcher/auto-pairs'
 Plug 'romainl/vim-cool'
 Plug 'tpope/vim-endwise'
 Plug 'romainl/vim-qf'
@@ -113,6 +113,8 @@ Plug 'matze/vim-move'
 Plug 'puremourning/vimspector'
 Plug 'dense-analysis/ale'
 Plug 'OmniSharp/omnisharp-vim'
+Plug 'bullets-vim/bullets.vim'
+Plug 'kana/vim-textobj-line'
 
 " UI
 Plug 'markonm/traces.vim'
@@ -316,6 +318,13 @@ let g:coc_user_config = {
   \ 'javascript.suggest.autoImports': v:true,
   \ 'typescript.suggest.autoImports': v:true,
   \ 'colors.enable': v:true,
+  \ 'markdownlint.config': { 
+  \   'MD004': v:false,
+  \   'MD012': v:false,
+  \   'MD013': v:false,
+  \   'MD025': v:false,
+  \   'MD032': v:false,
+  \ }
 \ }
 
 let g:coc_global_extensions= [ 
@@ -338,7 +347,9 @@ let g:coc_global_extensions= [
 let g:vim_markdown_new_list_item_indent = 0
 let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_follow_anchor = 1
-let g:vim_markdown_strikethrough = 1
+let g:vim_markdown_conceal_code_blocks = 0
+"let g:vim_markdown_auto_insert_bullets = 1
+"let g:vim_markdown_strikethrough = 1
 
 " Netrw
 let g:netrw_preview   = 1
