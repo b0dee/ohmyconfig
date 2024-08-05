@@ -70,7 +70,13 @@ ZSH_THEME="bira"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(
+    git
+    aws
+    virtualenvwrapper
+    zsh-autosuggestions
+)
+
 
 source $ZSH/oh-my-zsh.sh
 
@@ -113,12 +119,23 @@ add-zsh-hook chpwd tmux-git-autofetch
     
 eval "$(fzf --zsh)"
 
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
 alias rg="rg --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
 export FZF_DEFAULT_COMMAND="rg --files --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
+
+
+# fnm
+FNM_PATH="/home/stank/.local/share/fnm"
+if [ -d "$FNM_PATH" ]; then
+  export PATH="/home/stank/.local/share/fnm:$PATH"
+  eval "`fnm env`"
+fi
 
 # Launch tmux KEEP THIS LAST
 if command -v tmux &> /dev/null && [ -n "$PS1"  ] && [[ ! "$TERM" =~ screen  ]] && [[ ! "$TERM" =~ tmux  ]] && [ -z "$TMUX"  ]; then
     exec tmux
 fi
-
 
