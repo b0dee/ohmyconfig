@@ -107,6 +107,7 @@ Plug 'dhruvasagar/vim-zoom'
 Plug 'junegunn/vader.vim'
 Plug 'junegunn/vim-easy-align'
 Plug 'junegunn/vim-peekaboo'
+Plug 'b0dee/vim-bujo'
 Plug 'airblade/vim-matchquote'
 Plug 'machakann/vim-swap'
 Plug 'matze/vim-move'
@@ -216,13 +217,14 @@ let g:lightline = {
   \ 'colorscheme': 'sonokai',
   \ 'active': {
   \   'left': [ [ 'mode', 'zoomed', 'paste' ], [ 'gitbranch' ], [ 'readonly', 'pwd', 'relativepath', 'modified' ] ],
-  \   'right': [ [ 'filetype', 'fileencoding', 'fileformat'  ],  [ 'lineinfo', 'percent' ]],
+  \   'right': [ [ 'filetype', 'fileencoding', 'fileformat', 'journal'],  [ 'lineinfo', 'percent' ]],
   \ },
   \ 'inactive': {
   \   'left': [ [ 'readonly', 'pwd', 'relativepath', 'modified' ] ],
   \   'right': [ [ 'lineinfo', 'percent' ], []],
   \ },
   \ 'component_function': {
+  \   'journal': 'BujoHead',
   \   'gitbranch':'FugitiveHead',
   \   'pwd': 'RelativeOrAbsolutePath',
   \   'zoomed': "zoom#statusline"
