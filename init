@@ -10,19 +10,43 @@ apps="vim \
       zsh  \
 "
 
-# Setup
-echo [+] Symlinking config files
-OHMY_DIR=$( dirname $(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd ))
-find $OHMY_DIR/common $OHMY_DIR/linux -exec ln -s {} ~/ \;
+OHMY_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+LOGFILE=/mnt/tmp/
 
 echo [+] Updating and Upgrading apt repositories
-sudo apt update -y  && sudo apt dist-upgrade -y 
+sudo apt update -y &> /dev/null
+sudo apt dist-upgrade -y  &> /dev/null
 
 echo [+] Installing Apps: ${apps}
-sudo apt install ${apps}
+sudo apt install ${apps} -y &> /dev/null
+
+echo [+] Installing OhMyZsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended &> /dev/null
 
 echo [+] Installing Homebrew
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &> /dev/null
+
+echo [+] Symlinking config files
+for file in $(find $OHMY_DIR/common $OHMY_DIR/linux -maxdepth 1 -type f | cut -d/ -f 2)
+do
+      echo $OHMY_DIR/$file ~/$file
+      ln -f -s $OHMY_DIR/$file ~/$file
+done
+
+for file in $(find $OHMY_DIR/common $OHMY_DIR/linux -maxdepth 1 -type d | cut -d/ -f 2)
+do
+      echo $OHMY_DIR/$file ~/$file
+      ln -f -s $OHMY_DIR/$file ~/$file
+done
+
+[[ -d ~/repos ]] || echo [+] Creating repo folder
+[[ -d ~/repos ]] || mkdir ~/repos
+
+[[ -d ~/repos/ohmyconfig ]] || echo [+] Cloning b0dee/ohmyconfig 
+[[ -d ~/repos/ohmyconfig ]] || git clone https://github.com/b0dee/ohmyconfig.git ~/repos/ohmyconfig
+
+echo [+] Changing default shell to Zsh
+chsh -s $(which zsh)
 
 echo [+] Generating SSH keys
 ssh-keygen -q -N "" -t ed25519 -f ~/.ssh/id_ed25519-github
@@ -32,7 +56,4 @@ cat ~/.ssh/id_ed25519-github
 
 read -p "Copy the above public key into your GitHub SSH keys and press any key to continue... " -n1 -s
 
-[[ -d ~/repos ]] || echo [+] Creating repo folder && mkdir ~/repos
-
-[[ -d ~/repos/ohmyconfig ]] || echo [+] Cloning b0dee/ohmyconfig && git clone git@github.com:b0dee/ohmyconfig.git ~/repos/ohmyconfig
-
+echo [+] Init script complete. Please restart terminal/ launch Zsh
