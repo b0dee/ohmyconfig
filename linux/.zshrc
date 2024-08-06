@@ -74,7 +74,9 @@ plugins=(
     git
     aws
     virtualenvwrapper
-    zsh-autosuggestions
+    kubectl
+    kube-ps1
+    minikube
 )
 
 
