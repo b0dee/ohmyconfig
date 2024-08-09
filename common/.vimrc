@@ -52,6 +52,7 @@ set shiftround
 autocmd GUIEnter * set vb t_vb= " Disable error bells and visual flash for GUI
 autocmd VimEnter * set vb t_vb= " Same as above but terminal
 let g:polyglot_disabled = ['markdown']
+set t_Co=256
 
 " ################################
 " #                              #
