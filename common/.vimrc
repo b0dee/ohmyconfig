@@ -469,7 +469,7 @@ augroup END
 noremap  <silent><C-n> :Lexplore<CR>
 noremap! <silent><C-n> <Esc>:Lexplore<CR>
 tnoremap <silent><C-n> :Lexplore<CR>
-let g:move_key_modifier_visualmode = 'S'
+let g:move_key_modifier_visualmode = 'C'
 
 
 
