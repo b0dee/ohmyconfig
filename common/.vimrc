@@ -477,18 +477,10 @@ let g:move_key_modifier_visualmode = 'C'
 "" Notes
 "" ~~~~~~~~~~~~~~
 
-"" TODO - Markdown
-"" - fix markdown opening local file links
-
-"" TODO - vim-zoom
-"" - Fork and add in a scratch buffer, created/destroyed on toggle to prevent quit during zoom 
-""   (perhaps autocmd restore state if go into this window)
 "" TODO - General
 "" TODO - AutoPairs - Fix inserting closing paren when we there already exists one
 "" TODO - Add syntax highlight like TODO has for ISSUE and BUG etc.
-"" TODO - Go through Vim help manuals as missed loads
 "" TODO - Go through plugins and see what you're not fully utilising
-"" TODO - Try remove Tabular dependency from Vi-Mark replace with junegunn easy align?
 "" TODO - Try remove some plugins i.e. bookmarks? quickfix related ones?"
 
 "" vim-bujo Ideas: 
