@@ -99,7 +99,7 @@ Plug 'romainl/vim-cool'
 Plug 'tpope/vim-endwise'
 Plug 'romainl/vim-qf'
 Plug 'bfrg/vim-qf-preview'
-Plug 'sheerun/vim-polyglot'
+Plug 'b0dee/vim-polyglot'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': 'npm ci'}
 Plug 'mattn/calendar-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -117,6 +117,8 @@ Plug 'dense-analysis/ale'
 Plug 'OmniSharp/omnisharp-vim'
 Plug 'bullets-vim/bullets.vim'
 Plug 'kana/vim-textobj-line'
+Plug 'pearofducks/ansible-vim'
+Plug 'hashivim/vim-terraform'
 
 " UI
 Plug 'markonm/traces.vim'
