@@ -119,6 +119,7 @@ Plug 'bullets-vim/bullets.vim'
 Plug 'kana/vim-textobj-line'
 Plug 'pearofducks/ansible-vim'
 Plug 'hashivim/vim-terraform'
+Plug 'dhruvasagar/vim-table-mode'
 
 " UI
 Plug 'markonm/traces.vim'
