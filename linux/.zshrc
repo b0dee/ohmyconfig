@@ -74,6 +74,7 @@ plugins=(
     git
     aws
     virtualenvwrapper
+    kubectx
     kubectl
     kube-ps1
     minikube
@@ -128,6 +129,9 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 alias rg="rg --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
 export FZF_DEFAULT_COMMAND="rg --files --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
 
+FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+
+export PATH=$PATH:/usr/local/go/bin
 
 # fnm
 FNM_PATH="/home/stank/.local/share/fnm"
