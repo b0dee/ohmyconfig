@@ -71,13 +71,13 @@ ZSH_THEME="bira"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
-    git
     aws
     virtualenvwrapper
     kubectx
     kubectl
     kube-ps1
     minikube
+    git-auto-fetch
 )
 
 
@@ -112,25 +112,28 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-eval "$(fzf --zsh)"
+# Auto completion
+eval "$(fzf --zsh)"                                                # FZF auto completion
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"         # Brew apps auto completion
 
+# Go
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
+
+# Update Path
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 export PATH=$PATH:~/.local/bin
-
-export FZF_DEFAULT_COMMAND="rg --files --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
-
-FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
-
 export PATH=$PATH:/usr/local/go/bin
 
+# DotEnv secrets
 source ~/.env
+
+# Aliasses
+alias so="source"
+
 # fnm
 FNM_PATH="/home/stank/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
