@@ -330,6 +330,8 @@ let g:coc_user_config = {
   \   'MD013': v:false,
   \   'MD025': v:false,
   \   'MD032': v:false,
+  \   'MD033': v:false,
+  \   'MD056': v:false,
   \ }
 \ }
 

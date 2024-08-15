@@ -117,22 +117,20 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-tmux-git-autofetch() {(/home/joe/.tmux/plugins/tmux-git-autofetch/git-autofetch.tmux --current &)}
-add-zsh-hook chpwd tmux-git-autofetch
-    
 eval "$(fzf --zsh)"
 
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+export PATH=$PATH:~/.local/bin
 
-alias rg="rg --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
 export FZF_DEFAULT_COMMAND="rg --files --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}'"
 
 FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 
 export PATH=$PATH:/usr/local/go/bin
 
+source ~/.env
 # fnm
 FNM_PATH="/home/stank/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
