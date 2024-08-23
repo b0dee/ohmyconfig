@@ -380,6 +380,11 @@ if has('win32')
 endif
 let &runtimepath = &runtimepath . ',' . g:vimspector_base_dir
 
+" Bujo
+let g:bujo_path = "~/repos/bujo"
+
+" Table Mode
+let g:table_mode_syntax = 0
 
 " ################################
 " #                              #
