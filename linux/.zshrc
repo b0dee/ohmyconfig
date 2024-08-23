@@ -78,6 +78,7 @@ plugins=(
     kube-ps1
     minikube
     git-auto-fetch
+    terraform
 )
 
 

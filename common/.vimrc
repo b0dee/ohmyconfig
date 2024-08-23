@@ -228,7 +228,7 @@ let g:lightline = {
   \   'right': [ [ 'lineinfo', 'percent' ], []],
   \ },
   \ 'component_function': {
-  \   'journal': 'BujoHead',
+  \   'journal': 'bujo#Head',
   \   'gitbranch':'FugitiveHead',
   \   'pwd': 'RelativeOrAbsolutePath',
   \   'zoomed': "zoom#statusline"
