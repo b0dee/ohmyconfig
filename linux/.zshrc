@@ -127,12 +127,15 @@ export GOPATH=$HOME/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 export PATH=$PATH:~/.local/bin
 export PATH=$PATH:/usr/local/go/bin
+export PATH=$PATH:/home/stank/.linkerd2/bin
 
 # DotEnv secrets
 source ~/.env
 
 # Aliasses
 alias so="source"
+alias kctx="kubectx"
+alias kns="kubens"
 
 # fnm
 FNM_PATH="/home/stank/.local/share/fnm"
