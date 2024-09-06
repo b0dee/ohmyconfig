@@ -72,15 +72,12 @@ ZSH_THEME="bira"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
     aws
-    virtualenvwrapper
     kubectx
     kubectl
-    kube-ps1
     minikube
     git-auto-fetch
     terraform
 )
-
 
 source $ZSH/oh-my-zsh.sh
 
