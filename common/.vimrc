@@ -4,11 +4,11 @@
 " #                              #
 " ################################
 syntax on                                              " Enable syntax highlighting
+filetype indent on                                     " Indent based on file type
+let mapleader=" "
+set nrformats+=alpha                                   " Enable alphabetic increment/decrement
 set updatetime=100
 set conceallevel=2
-filetype indent on                                     " Indent based on file type
-" Set leader to space
-let mapleader=" "
 set confirm
 set nostartofline
 set noendofline
@@ -16,12 +16,15 @@ set pumheight=5                                        " Limit CoC to 5 sugestio
 set signcolumn=yes                                     " Always show sign column
 set tabstop=2 shiftwidth=2 softtabstop=2               " Indentation levels
 set expandtab smarttab autoindent                      " Tab settings
-set nobackup nowritebackup noundofile noswapfile       " Disable backups/swap files. We save often; VCS should be used for accidental edits/removals
+set nobackup nowritebackup                             " Disable backups
+set undofile swapfile                                  " Default but just be safe
+set undodir="~/.vim/undo"                              " Undo file save location
+set directory="~/.vim/swap"                            " Swap file save location
 set ignorecase smartcase incsearch hlsearch            " Text searching
 set number relativenumber                              " Line Numbering
 set wrap linebreak breakindent                         " Line wrapping - purely UI (not saved to file)
 set showbreak=+++\                                     " When text is wrapped, prefix with '+++ ' to signify wrapping
-set wildmode=list:full,full                        " Only affects command mode completion as CoC handles all other completions. Makes command mode completion work how we've configured CoC (tab auto select first option and fill)
+set wildoptions=pum
 set noruler
 set completeopt=menuone,popup,noselect,noinsert " Auto-complete menu display settings
 set complete-=i                                        " Stop Vim looking through header files for c lookups
@@ -49,10 +52,14 @@ highlight SpellBad cterm=bold ctermbg=darkred          " Spelling error highligh
 let &t_SI = "\e[5 q"                                   " Blinking line in insert
 let g:LargeFile=100                                    " Activate when file is > 100mb
 set shiftround
-autocmd GUIEnter * set vb t_vb= " Disable error bells and visual flash for GUI
-autocmd VimEnter * set vb t_vb= " Same as above but terminal
+autocmd VimEnter,GUIEnter * set vb t_vb=               " Disable error bells
 let g:polyglot_disabled = ['markdown']
 set t_Co=256
+if !has('win32')
+  set keywordprg=':Man'
+endif
+
+let conc=0
 
 " ################################
 " #                              #
@@ -67,11 +74,11 @@ if empty(glob(data_dir . '/autoload/plug.vim'))
 endif
 
 call plug#begin()
+Plug 'b0dee/zk.vim'
 " Git
 Plug 'tpope/vim-fugitive'
 Plug 'airblade/vim-gitgutter'
 Plug 'junegunn/gv.vim'
-Plug 'idanarye/vim-merginal'
 
 " Text Objects and Motions
 Plug 'kana/vim-textobj-user'
@@ -79,18 +86,19 @@ Plug 'tpope/vim-jdaddy'
 Plug 'wellle/targets.vim'
 Plug 'tpope/vim-surround'
 Plug 'vim-scripts/ReplaceWithRegister'
+Plug 'kana/vim-textobj-line'
+Plug 'machakann/vim-swap'
 
 " Configuration Presets
 Plug 'tpope/vim-sensible'
 Plug 'vim-scripts/LargeFile'
+Plug 'tpope/vim-commentary'
 
 " Tools and Utilities
+Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-commentary'
-Plug 'MattesGroeger/vim-bookmarks'
 Plug 'tpope/vim-dotenv'
 Plug 'tpope/vim-obsession'
-Plug 'gcmt/taboo.vim'
 Plug 'mbbill/undotree'
 Plug 'tpope/vim-vinegar'
 Plug 'godlygeek/tabular' | Plug 'b0dee/vi-mark'
@@ -101,25 +109,19 @@ Plug 'romainl/vim-qf'
 Plug 'bfrg/vim-qf-preview'
 Plug 'b0dee/vim-polyglot'
 Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': 'npm ci'}
-Plug 'mattn/calendar-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'dhruvasagar/vim-zoom'
-Plug 'junegunn/vader.vim'
-Plug 'junegunn/vim-easy-align'
 Plug 'junegunn/vim-peekaboo'
-Plug 'b0dee/vim-bujo'
 Plug 'airblade/vim-matchquote'
-Plug 'machakann/vim-swap'
-Plug 'matze/vim-move'
 Plug 'puremourning/vimspector'
 Plug 'dense-analysis/ale'
 Plug 'OmniSharp/omnisharp-vim'
 Plug 'bullets-vim/bullets.vim'
-Plug 'kana/vim-textobj-line'
 Plug 'pearofducks/ansible-vim'
 Plug 'hashivim/vim-terraform'
 Plug 'dhruvasagar/vim-table-mode'
+Plug 'mhinz/vim-startify'
 
 " UI
 Plug 'markonm/traces.vim'
@@ -167,10 +169,6 @@ autocmd VimEnter * call OnVimEnter()
 " #                              #
 " ################################
 
-" Merginal
-let g:merginal_resizeWindowToBranchLen = 1
-let g:merginal_showCommands = 0
-
 " Elevator
 let g:elevator#timeout_msec = 0
 let g:elevator#show_on_enter = v:true
@@ -183,9 +181,6 @@ autocmd FileType json syntax match Comment +\/\/.\+$+
 let g:sonokai_style = 'andromeda'
 let g:sonokai_better_performance = 1
 colorscheme sonokai
-
-" Bookmarks
-let g:bookmark_sign = '♥'
 
 " Rainbow
 let g:rainbow_active = 1
@@ -220,7 +215,7 @@ let g:rainbow_conf = {
 let g:lightline = {
   \ 'colorscheme': 'sonokai',
   \ 'active': {
-  \   'left': [ [ 'mode', 'zoomed', 'paste' ], [ 'gitbranch' ], [ 'readonly', 'pwd', 'relativepath', 'modified' ] ],
+  \   'left': [ [ 'mode', 'zoomed', 'paste' ], [ 'gitbranch' ], [ 'readonly', 'pwd', 'relativepath', 'modified', 'zkid' ] ],
   \   'right': [ [ 'filetype', 'fileencoding', 'fileformat', 'journal'],  [ 'lineinfo', 'percent' ]],
   \ },
   \ 'inactive': {
@@ -231,7 +226,7 @@ let g:lightline = {
   \   'journal': 'bujo#Head',
   \   'gitbranch':'FugitiveHead',
   \   'pwd': 'RelativeOrAbsolutePath',
-  \   'zoomed': "zoom#statusline"
+  \   'zoomed': "zoom#statusline",
   \ },
   \ 'component': {
   \   'lineinfo': '%3l:%-2v%<',
@@ -324,16 +319,17 @@ let g:coc_user_config = {
   \ 'javascript.suggest.autoImports': v:true,
   \ 'typescript.suggest.autoImports': v:true,
   \ 'colors.enable': v:true,
-  \ 'markdownlint.config': { 
-  \   'MD004': v:false,
-  \   'MD012': v:false,
-  \   'MD013': v:false,
-  \   'MD025': v:false,
-  \   'MD032': v:false,
-  \   'MD033': v:false,
-  \   'MD056': v:false,
-  \ }
 \ }
+  " \ 'markdownlint.config': { 
+  " \   'MD004': v:false,
+  " \   'MD012': v:false,
+  " \   'MD013': v:false,
+  " \   'MD025': v:false,
+  " \   'MD032': v:false,
+  " \   'MD033': v:false,
+  " \   'MD037': v:false,
+  " \   'MD056': v:false,
+  " \ }
 
 let g:coc_global_extensions= [ 
   \ 'coc-clangd',
@@ -342,7 +338,6 @@ let g:coc_global_extensions= [
   \ 'coc-html',
   \ 'coc-json',
   \ 'coc-markdownlint',
-  \ 'coc-jedi',
   \ 'coc-sh',
   \ 'coc-sql',
   \ 'coc-tsserver',
@@ -366,10 +361,6 @@ let g:netrw_liststyle = 3
 let g:netrw_winsize   = 30
 let g:netrw_browse_split = 4
 
-" Calendar
-let g:calendar_monday = 1
-let g:calendar_diary= $HOME . '/repos/diary'
-
 " Vimspector
 let g:vimspector_enable_mappings = 'HUMAN'
 let g:vimspector_install_gadgets=[ '--all', 'netcoredbg', 'vscode-js-debug' ]
@@ -379,12 +370,53 @@ if has('win32')
     let g:vimspector_base_dir = substitute(g:vimspector_base_dir, '/', '\', 'g')
 endif
 let &runtimepath = &runtimepath . ',' . g:vimspector_base_dir
+" Write a vim function to rebuild the current dotnet project first and call OmniSharpDebugProject or launch vimspector with a custom adapter for each available gadget
 
-" Bujo
-let g:bujo_path = "~/repos/bujo"
+" vimspector#LaunchWithConfigurations({
+"       \   "attach": {
+"       \     "adapter": "debugpy",
+"       \     "default": true,
+"       \     "configuration": {
+"       \       "request": "launch",
+"       \       "cwd": "${workspaceRoot}",
+"       \       "program": "${file}",
+"       \       "stopOnEntry": false
+"       \     },
+"       \     "breakpoints": {
+"       \       "exception": {
+"       \         "raised": "N",
+"       \         "uncaught": "",
+"       \         "userUnhandled": ""
+"       \       }
+"       \    }
+"       \ })<CR>
+" autocmd filetype python map <silent><f5> :call VimspectorWrapper()<CR>
 
 " Table Mode
 let g:table_mode_syntax = 0
+
+" Swap
+let g:swap#rules = deepcopy(g:swap#default_rules)
+let g:swap#rules += [{
+ \   "delimiter": ['_'],
+ \   "body": '\h\w*\(_\h\w*\)\+',
+ \ 
+ \ },
+ \ {
+ \   "delimiter": ['-'],
+ \   "body": '\h\w*\(-\h\w*\)\+',
+ \ 
+ \ },
+ \ {
+ \   "delimiter": ['\'],
+ \   "body": '\h\w*\(\\\h\w*\)\+',
+ \ 
+ \ },
+ \ {
+ \   "delimiter": ['/'],
+ \   "body": '\h\w*\(\/\h\w*\)\+',
+ \ }]
+
 
 " ################################
 " #                              #
@@ -451,6 +483,10 @@ cnoreabbrev Changes GitGutterLineHighlightsToggle
 autocmd FileType * nmap <silent> gd <Plug>(coc-definition)
 autocmd FileType * nmap <silent> gi <Plug>(coc-implementation)
 
+autocmd FileType cs nmap <silent> <buffer> gd <Plug>(omnisharp_go_to_definition)
+autocmd FileType cs nmap <silent> <buffer> gi <Plug>(omnisharp_find_implementations)
+autocmd FileType cs nmap <silent> <buffer> gpi <Plug>(omnisharp_preview_implementations)
+
 nnoremap <silent>K :call ShowDocumentation()<CR>
 
 " Use tab for trigger completion with characters ahead and navigate
@@ -464,12 +500,14 @@ inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 " <C-g>u breaks current undo, please make your own choice
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-abbreviate Cal CalendarT
 
-" Overwrite FZF Rg/RG commands to include dot files, excluding node_modules
-" and git folders
-command! -bang -nargs=? -complete=dir Rg call fzf#vim#grep("rg --column --line-number --no-heading --color=always --smart-case --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}' -- ".fzf#shellescape(<q-args>), fzf#vim#with_preview(), <bang>0)
-command! -bang -nargs=? -complete=dir RG call fzf#vim#grep2("rg --column --line-number --no-heading --color=always --smart-case --follow --no-ignore-vcs --hidden -g '!{**/node_modules/*,**/.git/*}' -- ", <q-args>, fzf#vim#with_preview(), <bang>0)
+let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
+let $FZF_DEFAULT_OPTS="--preview-window 'right:57%' --preview 'bat --style=numbers --line-range :300 {}' 
+\ --bind ctrl-y:preview-up,ctrl-e:preview-down,
+\ctrl-b:preview-page-up,ctrl-f:preview-page-down,
+\ctrl-u:preview-half-page-up,ctrl-d:preview-half-page-down,
+\shift-up:preview-top,shift-down:preview-bottom,
+\alt-up:half-page-up,alt-down:half-page-down"
 
 augroup netrw_mapping
   autocmd!
@@ -480,8 +518,12 @@ augroup END
 noremap  <silent><C-n> :Lexplore<CR>
 noremap! <silent><C-n> <Esc>:Lexplore<CR>
 tnoremap <silent><C-n> :Lexplore<CR>
-let g:move_key_modifier_visualmode = 'C'
 
+" TODO - Easy way of setting scrollbind on a buffer then splitting it so 
+" it auto syncs vertical (but not horizontal) movements
+" i.e. 
+" map <leader>s <Esc>:set scrollbind | vsplit | edit %<CR>
+" TODO - Map i/v modes ctrl+{hjkl} to move to window/tmux pane
 
 
 "" ~~~~~~~~~~~~~~
@@ -503,3 +545,6 @@ let g:move_key_modifier_visualmode = 'C'
 ""   entry, then foud the appropriate type to enter it under
 "" - Switch to have entries append to list rather than insert at the top. This work will be needed for collections anyhow
 ""   (as they are being put into index rather than a log). 
+
+" ----------------------------------------
+" ZK
