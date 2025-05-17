@@ -120,6 +120,9 @@ eval "$(fzf --zsh)"                                                # FZF auto co
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"         # Brew apps auto completion
 
+# Editor
+export EDITOR=vim
+
 # Go
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
@@ -150,3 +153,6 @@ if command -v tmux &> /dev/null && [ -n "$PS1"  ] && [[ ! "$TERM" =~ screen  ]] 
     exec tmux
 fi
 
+
+# Turso
+export PATH="$PATH:/home/stank/.turso"
